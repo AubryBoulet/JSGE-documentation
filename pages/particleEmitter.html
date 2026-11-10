@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ParticleEmitter – JSGE Documentation</title>
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body>
+<main>
+  <h1>ParticleEmitter</h1>
+  <p class="lead">Emits particles for effects such as fire, smoke, impacts or explosions, with control over speed, color, size and lifetime.</p>
+
+  <h2>Usage</h2>
+  <pre><code class="language-js">
+const fire = new ParticleEmitter(400, 500);       // x, y
+fire.particleColorRange = { startColor: "#ff4400", endColor: "#ffff00" };
+fire.particleLifetime = { min: 500, max: 1500 };
+fire.emissionDuration = 0;                         // 0 = unlimited
+fire.startEmission();
+
+scene.add(fire, 1);       // drawn above z-order 0
+// or, without a scene: fire.draw(camera) every frame
+  </code></pre>
+  <p>An emitter draws nothing until <code>startEmission()</code> is called. By default it stops by itself after one second. Particles are small colored squares managed by the emitter (you never create one yourself): once emitted they live in camera space, so moving the emitter does not move particles that are already flying. A particle disappears when its lifetime is over or when it reaches an edge of the camera.</p>
+
+  <h2>Methods</h2>
+  <table>
+    <tr><th>Method</th><th>Description</th></tr>
+    <tr><td><code>new ParticleEmitter(x, y)</code></td><td>Creates an emitter at the given position, with the default settings below.</td></tr>
+    <tr><td><code>startEmission(endCallback)</code></td><td>Starts emitting. The optional callback is called with the emitter once emission is over and every particle is gone.</td></tr>
+    <tr><td><code>stopEmission()</code></td><td>Stops emitting. Existing particles finish their life.</td></tr>
+    <tr><td><code>draw(camera, zOrder = 0)</code></td><td>Queues the emitter on a camera for the current frame. Not needed if the emitter is in a <a href="scene.html">Scene</a>.</td></tr>
+    <tr><td><code>clone()</code></td><td>Returns a new emitter with the same settings. Use it to have several bursts at the same time, since one emitter has a single running emission.</td></tr>
+  </table>
+
+  <h2>Properties</h2>
+  <table>
+    <tr><th>Property</th><th>Default</th><th>Description</th></tr>
+    <tr><td><code>x</code>, <code>y</code></td><td>constructor</td><td>Where the particles are born.</td></tr>
+    <tr><td><code>emissionRate</code></td><td><code>10</code></td><td>Number of particles emitted per second.</td></tr>
+    <tr><td><code>particlesPerEmission</code></td><td><code>1</code></td><td>Number of particles created each time the emitter fires.</td></tr>
+    <tr><td><code>emissionDuration</code></td><td><code>1</code></td><td>Duration of the emission <strong>in seconds</strong>. <code>0</code> means unlimited. Reading the property returns milliseconds.</td></tr>
+    <tr><td><code>particleLifetime</code></td><td><code>{min:1000, max:2000}</code></td><td>Lifetime range in milliseconds, picked randomly for each particle.</td></tr>
+    <tr><td><code>particleSize</code></td><td><code>{width:1, height:1}</code></td><td>Size of a particle in pixels.</td></tr>
+    <tr><td><code>particleEmissionSpeed</code></td><td><code>{min:1, max:3}</code></td><td>Initial speed range, in pixels per frame.</td></tr>
+    <tr><td><code>particleEmitterAngleRange</code></td><td><code>{rangeMin:45, rangeMax:90}</code></td><td>Range of emission angles in degrees. <code>0</code> points right and <code>90</code> points down (screen coordinates). Use <code>{rangeMin:0, rangeMax:360}</code> for all directions.</td></tr>
+    <tr><td><code>particleEmitterDirection</code></td><td><code>{x:0, y:-1}</code></td><td>Vector added to the initial velocity of every particle. Use <code>{x:0, y:0}</code> for a neutral emitter.</td></tr>
+    <tr><td><code>particleAcceleration</code></td><td><code>{x:0, y:0}</code></td><td>Added to the velocity of each particle on every frame: gravity, wind…</td></tr>
+    <tr><td><code>particleColorRange</code></td><td><code>{startColor:"#ffffff", endColor:"#000000"}</code></td><td>Each particle gets a random color between the two. Use hex (<code>"#ff4400"</code>) or <code>"rgb(255, 68, 0)"</code>. Color names such as <code>"blue"</code> are not supported.</td></tr>
+    <tr><td><code>particleColorChangeRate</code></td><td><code>{r:0, g:0, b:0}</code></td><td>Amount added to each color channel on every frame (kept between 0 and 255), to make particles fade or change color.</td></tr>
+    <tr><td><code>isEmitting</code></td><td>–</td><td>Read-only boolean.</td></tr>
+  </table>
+
+  <h2>Several bursts: clone the emitter</h2>
+  <p>While an emitter is running, calling <code>startEmission()</code> again would restart it. For effects that can overlap (impacts, explosions), clone a template, add the clone to the scene, and remove it when it is done:</p>
+  <pre><code class="language-js">
+const burst = burstTemplate.clone();
+burst.x = 300;
+burst.y = 200;
+burst.startEmission((emitter) => scene.remove(emitter));
+scene.add(burst, 1);
+  </code></pre>
+
+  <h2>Try it</h2>
+  <p>Click anywhere to trigger an explosion.</p>
+  <div class="demo" data-title="Explosions with clone()" data-width="1000" data-height="600" data-fixed>
+<script type="text/plain">
+import { Camera, Scene, ParticleEmitter } from "https://cdn.jsdelivr.net/gh/AubryBoulet/JSGE@main/JSGE/jsge.js";
+
+const canvas = document.querySelector("#gameCanvas");
+const cam = new Camera({ canvas, position: { x: 0, y: 0 }, dimensions: { width: 1000, height: 600 }, backgroundColor: "#0b132b" });
+const scene = new Scene();
+
+// The template: configured once, never started itself
+const template = new ParticleEmitter(0, 0);
+template.particleSize = { width: 5, height: 5 };
+template.particleColorRange = { startColor: "#ff4400", endColor: "#ffd60a" };
+template.particleEmissionSpeed = { min: 1, max: 4 };
+template.particleLifetime = { min: 500, max: 1500 };
+template.particleAcceleration = { x: 0, y: 0.05 };          // a little gravity
+template.particleEmitterAngleRange = { rangeMin: 0, rangeMax: 360 };
+template.particleEmitterDirection = { x: 0, y: 0 };
+template.emissionRate = 100;
+template.particlesPerEmission = 2;
+template.emissionDuration = 0.3;                              // seconds
+
+canvas.addEventListener("click", () => {
+  const mouse = cam.cameraMousePosition;
+  const explosion = template.clone();
+  explosion.x = mouse.x;
+  explosion.y = mouse.y;
+  explosion.startEmission((emitter) => scene.remove(emitter));   // clean up when finished
+  scene.add(explosion, 1);
+});
+
+function mainLoop() {
+  cam.clear();
+  scene.draw(cam);
+  cam.flipBuffer();
+  requestAnimationFrame(mainLoop);
+}
+mainLoop();
+</script>
+  </div>
+</main>
+<script src="../assets/nav.js"></script>
+<script src="../assets/highlight.js"></script>
+<script src="../assets/demo.js"></script>
+</body>
+</html>

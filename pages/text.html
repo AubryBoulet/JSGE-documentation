@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Text – JSGE Documentation</title>
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body>
+<main>
+  <h1>Text</h1>
+  <p class="lead">Renders text on its own canvas, with automatic line wrapping and per-word effects: colors, wave, shake, blink and gradients.</p>
+
+  <h2>Usage</h2>
+  <p>A <code>Text</code> is not an entity: it owns a canvas that you draw on the camera yourself. The best place is <code>camera.postProcess</code>, which draws on top of everything. Call <code>text._update()</code> on every frame so animated effects advance.</p>
+  <pre><code class="language-js">
+const score = new Text("${white Score: 0}", 300, 50);   // value, width, height
+
+cam.postProcess = () => {
+  score._update();                                      // advances the effects
+  cam.cameraCtx.drawImage(score.canvas, 10, 10);
+};
+
+score.value = "${wave(5,2,5,1.5) ${white Score: 10}}";   // changes the text
+  </code></pre>
+  <p>Text is black by default. Color it with the markup below. Words are wrapped to the width given to the constructor.</p>
+
+  <h2>Effect markup</h2>
+  <p>An effect applies to words: <code>${effect words}</code>, where <code>${</code> must be glued to the effect name, followed by a space, and the effect ends with the closing <code>}</code>. Effects can be nested.</p>
+  <table>
+    <tr><th>Markup</th><th>Result</th></tr>
+    <tr><td><code>${red Hello}</code>, <code>${#4cc9f0 Hello}</code></td><td>Colors the words. Use a CSS color name or a hex color.</td></tr>
+    <tr><td><code>${wave Hello}</code></td><td>Letters move up and down in a wave.</td></tr>
+    <tr><td><code>${shake Hello}</code></td><td>Words shake randomly.</td></tr>
+    <tr><td><code>${blink Hello}</code></td><td>Words blink.</td></tr>
+    <tr><td><code>${grad(name) Hello}</code></td><td>Fills the words with a gradient registered with <code>text.addGradient(name, gradient)</code>.</td></tr>
+  </table>
+  <p>Wave, shake and blink accept parameters in parentheses, in this order: <code>amplitude</code> (pixels, default 5), <code>frequency</code> (frames between two updates, default 9), <code>speed</code> (default 3), <code>duration</code> (seconds, default 0 = endless). For example <code>${wave(5,2,5,1.5) …}</code> is a wave of 5 pixels, updated every 2 frames, at speed 5, lasting 1.5 seconds. Amplitude only applies to wave and shake, so for blink use <code>${blink(0,20) …}</code> to set the frequency.</p>
+  <p>The markup contains <code>${</code>, which JavaScript treats as an interpolation inside backtick template strings. Write effect strings with regular quotes, or escape the dollar sign (<code>\${</code>).</p>
+
+  <h2>Properties and methods</h2>
+  <table>
+    <tr><th>Name</th><th>Description</th></tr>
+    <tr><td><code>new Text(value, width, height)</code></td><td>Creates the text and its canvas.</td></tr>
+    <tr><td><code>value</code></td><td>The text. Setting it parses the effect markup again. Reading it returns the text without markup.</td></tr>
+    <tr><td><code>font</code></td><td>CSS font, <code>"24px arial"</code> by default.</td></tr>
+    <tr><td><code>textAlign</code></td><td><code>"start"</code> (default), <code>"end"</code>, <code>"left"</code>, <code>"right"</code> or <code>"center"</code>.</td></tr>
+    <tr><td><code>textBaseline</code>, <code>textDirection</code></td><td>Same as the Canvas properties.</td></tr>
+    <tr><td><code>width</code>, <code>height</code></td><td>Size of the text canvas.</td></tr>
+    <tr><td><code>amplitude</code>, <code>frequency</code>, <code>speed</code>, <code>duration</code></td><td>Default parameters used by effects that do not specify their own.</td></tr>
+    <tr><td><code>canvas</code>, <code>ctx</code></td><td>The text canvas and its 2D context. Draw <code>canvas</code> on the camera with <code>drawImage()</code>.</td></tr>
+    <tr><td><code>effects</code></td><td>Read-only boolean: <code>true</code> if the text contains effects.</td></tr>
+    <tr><td><code>addGradient(name, gradient)</code></td><td>Registers a gradient for the <code>grad</code> effect.</td></tr>
+    <tr><td><code>_update()</code></td><td>Advances the effects and redraws the canvas when needed. Call it on every frame if the text has effects.</td></tr>
+  </table>
+
+  <h2>Try it</h2>
+  <p>Click the canvas to increase the counter. Each change replays a wave effect.</p>
+  <div class="demo" data-title="Text with effects" data-width="800" data-height="300">
+<script type="text/plain">
+import { Camera, Text } from "https://cdn.jsdelivr.net/gh/AubryBoulet/JSGE@main/JSGE/jsge.js";
+
+const canvas = document.querySelector("#gameCanvas");
+const cam = new Camera({ canvas, position: { x: 0, y: 0 }, dimensions: { width: 800, height: 300 }, backgroundColor: "#111" });
+
+// Static colors
+const title = new Text("${red Red} ${green Green} ${#4cc9f0 Hex} colors", 700, 50);
+title.font = "36px sans-serif";
+
+// A counter with a wave effect (5px, every 2 frames, speed 5, for 1.5 seconds)
+const counter = new Text("${white Clicks: 0}", 700, 50);
+counter.font = "36px sans-serif";
+
+let clicks = 0;
+canvas.addEventListener("click", () => {
+  clicks++;
+  counter.value = "${wave(5,2,5,1.5) ${white Clicks: " + clicks + "}}";
+});
+
+cam.postProcess = () => {
+  title._update();
+  counter._update();
+  cam.cameraCtx.drawImage(title.canvas, 40, 60);
+  cam.cameraCtx.drawImage(counter.canvas, 40, 160);
+};
+
+function mainLoop() {
+  cam.clear();
+  cam.flipBuffer();
+  requestAnimationFrame(mainLoop);
+}
+mainLoop();
+</script>
+  </div>
+</main>
+<script src="../assets/nav.js"></script>
+<script src="../assets/highlight.js"></script>
+<script src="../assets/demo.js"></script>
+</body>
+</html>

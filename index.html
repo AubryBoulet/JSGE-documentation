@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>JSGE – Documentation</title>
+<meta name="description" content="JSGE: a lightweight 2D game engine in pure JavaScript, with zero dependencies.">
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+<main>
+  <span class="badge">v0.1 · pre-alpha</span><span class="badge">ES6+</span><span class="badge">0 dependencies</span>
+  <h1>🎮 JSGE</h1>
+  <p class="lead"><strong>Just a Simple Game Engine</strong>: a lightweight 2D game engine written in pure JavaScript (ES6+), with zero dependencies. Designed for rapid game prototyping with advanced visual effects.</p>
+  <p>It’s a good fit for prototyping game mechanics, learning game development, personal projects or small HTML5 games, and experimenting with Canvas and animations.</p>
+  <p><a href="https://github.com/AubryBoulet/JSGE">Source code on GitHub</a></p>
+
+  <h2>Features</h2>
+  <div class="grid">
+    <div class="card"><h3>🎇 Particle system</h3><p>Fire, smoke, explosions, with precise control over speed, color and lifetime.</p></div>
+    <div class="card"><h3>💡 Light engine</h3><p>Basic mask-based lighting. No true shadow casting yet: a raycasting-based system is planned.</p></div>
+    <div class="card"><h3>📹 Nested cameras</h3><p>Parallax and filter effects with child cameras. The parent camera takes care of clearing their content.</p></div>
+    <div class="card"><h3>🎭 Scene management</h3><p>Optimized element organization with automatic z-order sorting.</p></div>
+    <div class="card"><h3>🎨 Animated backgrounds</h3><p>Parallax, loops and velocity for dynamic backgrounds.</p></div>
+    <div class="card"><h3>🔄 Smooth transitions</h3><p>A large library of easing functions.</p></div>
+    <div class="card"><h3>🎮 Entity system</h3><p>Game object management: position, physics and collisions.</p></div>
+  </div>
+
+  <h2>Installation</h2>
+  <p>The quickest way is to import JSGE from the jsDelivr CDN, in an ES module.</p>
+  <pre><code class="language-html">
+&lt;canvas id="gameCanvas" width="800" height="600">&lt;/canvas>
+&lt;script type="module">
+  import { Camera, Scene, ParticleEmitter } from "https://cdn.jsdelivr.net/gh/AubryBoulet/JSGE@main/JSGE/jsge.js";
+
+  const camera = new Camera({
+    canvas: document.getElementById("gameCanvas"),
+    position: { x: 0, y: 0 },
+    dimensions: { width: 800, height: 600 },
+    backgroundColor: "#166088"
+  });
+&lt;/script>
+  </code></pre>
+  <p>For development, clone the repository (<code>git clone https://github.com/AubryBoulet/JSGE.git</code>) and import from <code>JSGE/jsge.js</code>, the entry point that re-exports every class:</p>
+  <div class="chips">
+    <span>Camera</span><span>Scene</span><span>Entity</span><span>Sprite</span><span>Text</span><span>Button</span><span>Element</span><span>Transition</span><span>ParticleEmitter</span>
+  </div>
+
+  <h2>Try it: a campfire</h2>
+  <p>Move the mouse over the canvas: the fire follows it. Edit the code, then click “Run”. The engine is loaded live from the CDN.</p>
+  <div class="demo" data-title="Fire effect with ParticleEmitter" data-width="1000" data-height="600" data-fixed>
+<script type="text/plain">
+import { Camera, ParticleEmitter } from "https://cdn.jsdelivr.net/gh/AubryBoulet/JSGE@main/JSGE/jsge.js";
+
+const camera = new Camera({
+  canvas: document.getElementById("gameCanvas"),
+  position: { x: 0, y: 0 },
+  dimensions: { width: 1000, height: 600 },
+  backgroundColor: "#000000"
+});
+
+const fire = new ParticleEmitter(500, 450);
+fire.particleEmissionSpeed = { min: 1, max: 3 };
+fire.particleSize = { width: 6, height: 6 };
+fire.particleColorRange = { startColor: "#ff4400", endColor: "#ffff00" };
+fire.particleColorChangeRate = { r: -1, g: 0, b: 0 };
+fire.particleLifetime = { min: 500, max: 1500 };
+fire.particleAcceleration = { x: 0, y: -0.1 };
+fire.emissionRate = 20;
+fire.emissionDuration = 0;   // in seconds, 0 = unlimited
+fire.particleEmitterAngleRange = { rangeMin: 80, rangeMax: 100 };
+fire.particleEmitterDirection = { x: 0, y: -1 };
+fire.startEmission();
+
+// onUpdate runs on every new frame: make the emitter follow the mouse
+camera.onUpdate = () => {
+  const mouse = camera.cameraMousePosition;
+  if (mouse.x || mouse.y) {   // (0, 0) until the mouse has moved over the canvas
+    fire.x = mouse.x;
+    fire.y = mouse.y;
+  }
+};
+
+function gameLoop() {
+  camera.clear();          // starts a new frame
+  fire.draw(camera);       // draws the particles
+  camera.flipBuffer();     // must be called manually
+  requestAnimationFrame(gameLoop);
+}
+gameLoop();
+</script>
+  </div>
+
+  <h2>Best practices</h2>
+  <div class="cols">
+    <div class="do">
+      <h3>✅ Do</h3>
+      <ul>
+        <li>Always use a <code>Scene</code>: <code>scene.draw(camera)</code> followed by <code>camera.flipBuffer()</code> is mandatory.</li>
+        <li>Call <code>flipBuffer()</code> manually: nothing is displayed without it.</li>
+        <li>Call <code>camera.clear()</code> every frame to avoid visual artifacts.</li>
+        <li>Limit the number of light emitters: the light engine uses several canvases.</li>
+      </ul>
+    </div>
+    <div class="dont">
+      <h3>❌ Avoid</h3>
+      <ul>
+        <li>Private methods (starting with <code>_</code> or <code>#</code>): incorrect use can crash the engine.</li>
+        <li>Drawing without a <code>Scene</code>: entities and elements have no draw function of their own.</li>
+        <li>Using <code>moveCamera()</code> for scrolling: it moves the camera and its content, it is not a scrolling solution.</li>
+      </ul>
+    </div>
+  </div>
+
+  <h2>Roadmap</h2>
+  <table>
+    <tr><th>Version</th><th>Planned</th><th>Status</th></tr>
+    <tr><td>0.1</td><td>Core engine: particles, basic lighting, cameras, scenes</td><td>✅ Current</td></tr>
+    <tr><td>0.2</td><td>Stabilization and optimization, multitasking for the draw phases</td><td>🚧 Planned</td></tr>
+    <tr><td>0.3</td><td>Advanced collisions, basic audio, spritesheets</td><td>⏳ Planned</td></tr>
+    <tr><td>0.4</td><td>Advanced lighting with raycasting shadows, particle improvements</td><td>⏳ Planned</td></tr>
+    <tr><td>1.0</td><td>Stable version with the full feature set</td><td>⏳ Future</td></tr>
+  </table>
+  <p>⚠️ JSGE is in pre-alpha: the API may change before 1.0. Use it for prototyping and testing, not for production projects.</p>
+
+  <footer>Found a bug, have an idea, or a correction for this documentation? Open an <a href="https://github.com/AubryBoulet/JSGE/issues">issue</a> or a pull request.</footer>
+</main>
+<script src="assets/nav.js"></script>
+<script src="assets/highlight.js"></script>
+<script src="assets/demo.js"></script>
+</body>
+</html>

@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>My first game with JSGE – Documentation</title>
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body>
+<main>
+  <h1>My first game with JSGE</h1>
+  <p class="lead">Let’s build a block breaker step by step: a paddle that follows the mouse, a ball, and blocks to destroy.</p>
+  <p>The complete game, with impact particles and an animated score, is available in the <a href="https://github.com/AubryBoulet/JSGE/tree/main/exemples/brick%20break"><code>exemples/brick break</code></a> folder of the repository. This page presents a simplified version that you can edit live at the bottom.</p>
+
+  <h2>1. The HTML page</h2>
+  <p>You need a <code>&lt;canvas&gt;</code> and a script loaded as an ES module.</p>
+  <pre><code class="language-html">
+&lt;canvas id="gameCanvas" width="1000" height="600">&lt;/canvas>
+&lt;script src="index.js" type="module">&lt;/script>
+  </code></pre>
+
+  <h2>2. Import the engine and create a camera</h2>
+  <p>The <code>Camera</code> is the “window” onto your game: it receives the canvas element, its dimensions, and a background color (or image). Its target framerate is 60 FPS by default (use <code>camera.targetFPS</code> to change it).</p>
+  <pre><code class="language-js">
+import { Camera, Sprite, Scene, Entity } from "https://cdn.jsdelivr.net/gh/AubryBoulet/JSGE@main/JSGE/jsge.js";
+
+const canvas = document.querySelector("#gameCanvas");
+const cam = new Camera({
+  canvas: canvas,
+  position: { x: 0, y: 0 },
+  dimensions: { width: 1000, height: 600 },
+  backgroundColor: "black"
+});
+  </code></pre>
+  <p>The <code>canvas</code> parameter is the canvas element itself, not its id.</p>
+
+  <h2>3. Create sprites</h2>
+  <p><code>Sprite.create(width, height)</code> builds an empty sprite with its own 2D context, available as <code>sprite.ctx</code>. You draw on it with the usual Canvas methods, without any external image.</p>
+  <pre><code class="language-js">
+const blockSprite = Sprite.create(50, 20);
+blockSprite.ctx.fillStyle = "royalblue";
+blockSprite.ctx.fillRect(1, 1, 49, 19);   // leave a 1-pixel border
+
+const ballSprite = Sprite.create(10, 10);
+ballSprite.ctx.fillStyle = "white";
+ballSprite.ctx.arc(5, 5, 5, 0, 2 * Math.PI);
+ballSprite.ctx.fill();
+  </code></pre>
+  <p>To load a real image, use <code>await Sprite.load("path/image.png")</code>.</p>
+
+  <h2>4. Create entities</h2>
+  <p>An <code>Entity</code> pairs a sprite with a position. With <code>physic: true</code> it detects collisions. <code>Entity.create(data, [objects])</code> also lets you attach your own properties and methods to it (hit points, damage…).</p>
+  <pre><code class="language-js">
+const ball   = Entity.create({ sprite: ballSprite,   position: { x: 495, y: 550 }, physic: true });
+const paddle = Entity.create({ sprite: paddleSprite, position: { x: 450, y: 560 } });
+  </code></pre>
+
+  <h2>5. Group everything in a scene</h2>
+  <p>A <code>Scene</code> keeps its elements sorted by <code>zOrder</code> (0 by default; higher values are drawn on top). The sort is only recomputed when needed, which performs better than drawing entities directly.</p>
+  <pre><code class="language-js">
+const scene = new Scene();
+scene.addArray(blocks);   // an array of entities
+scene.add(ball);
+scene.add(paddle);
+// scene.add(elem, 1) to draw on top; scene.remove(elem) to remove
+  </code></pre>
+
+  <h2>6. Handle collisions</h2>
+  <p>Collisions are declared from the “active” entity. The callback receives the entity that was hit. (Note the spelling of the API: <code>addColision…</code>, with a single “l”.)</p>
+  <pre><code class="language-js">
+ball.addColisionWithArrayOfEntities(blocks, (block) => {
+  scene.remove(block);                    // the block disappears
+  ball.removeColisionWithEntity(block);   // and no longer counts for collisions
+  ball.velocity.y *= -1;                  // bounce
+});
+ball.addColisionWithEntity(paddle, () => { ball.velocity.y *= -1; });
+  </code></pre>
+
+  <h2>7. Game logic with <code>onUpdate</code></h2>
+  <p><code>camera.onUpdate</code> is called on every new frame, just before drawing: it’s the ideal place for game logic. <code>camera.cameraMousePosition</code> gives the mouse position relative to the camera.</p>
+  <pre><code class="language-js">
+cam.onUpdate = () => {
+  const mouseX = cam.cameraMousePosition.x;
+  paddle.position.x += (mouseX - (paddle.position.x + 50)) * 0.05;   // smooth movement (lerp)
+  // … wall bounces, lost ball, etc.
+};
+  </code></pre>
+
+  <h2>8. The main loop</h2>
+  <p>Three calls, always in this order: <code>clear()</code> starts a new frame, <code>scene.draw(cam)</code> prepares the draw list, and <code>flipBuffer()</code> renders it. Nothing is displayed without <code>flipBuffer()</code>. The engine respects the camera’s target FPS even if <code>requestAnimationFrame</code> fires more often.</p>
+  <pre><code class="language-js">
+function mainLoop() {
+  cam.clear();
+  scene.draw(cam);
+  cam.flipBuffer();
+  requestAnimationFrame(mainLoop);
+}
+mainLoop();
+  </code></pre>
+
+  <h2>The game, live</h2>
+  <p>Move the mouse to control the paddle and click inside the game to launch the ball. The code is editable: change the speed, the number of block rows, the colors…</p>
+  <div class="demo" data-title="Simplified block breaker" data-width="1000" data-height="600" data-fixed>
+<script type="text/plain">
+import { Camera, Sprite, Scene, Entity } from "https://cdn.jsdelivr.net/gh/AubryBoulet/JSGE@main/JSGE/jsge.js";
+
+const canvas = document.querySelector("#gameCanvas");
+const cam = new Camera({ canvas, position: { x: 0, y: 0 }, dimensions: { width: 1000, height: 600 }, backgroundColor: "black" });
+
+// --- Sprites ---
+const bw = 50, bh = 20;
+const blockSprite = Sprite.create(bw, bh);
+blockSprite.ctx.fillStyle = "royalblue";
+blockSprite.ctx.fillRect(1, 1, bw - 1, bh - 1);
+
+const ballSprite = Sprite.create(10, 10);
+ballSprite.ctx.fillStyle = "white";
+ballSprite.ctx.arc(5, 5, 5, 0, 2 * Math.PI);
+ballSprite.ctx.fill();
+
+const paddleSprite = Sprite.create(100, 30);
+paddleSprite.ctx.fillStyle = "grey";
+paddleSprite.ctx.fillRect(0, 0, 100, 30);
+
+// --- Entities ---
+const blocks = [];
+for (let row = 0; row < 4; row++) {
+  for (let col = 0; col < 20; col++) {
+    blocks.push(Entity.create({ sprite: blockSprite, position: { x: bw * col, y: 50 + bh * row } }));
+  }
+}
+const ball = Entity.create({ sprite: ballSprite, position: { x: 495, y: 550 }, physic: true });
+const paddle = Entity.create({ sprite: paddleSprite, position: { x: 450, y: 560 } });
+let ballMoving = false;
+const speed = 5;
+
+// --- Scene ---
+const scene = new Scene();
+scene.addArray(blocks);
+scene.add(ball);
+scene.add(paddle);
+
+// --- Collisions ---
+ball.addColisionWithArrayOfEntities(blocks, (block) => {
+  scene.remove(block);
+  ball.removeColisionWithEntity(block);
+  if (ball.position.x < block.position.x || ball.position.x > block.position.x + bw) {
+    ball.velocity.x *= -1;
+  } else {
+    ball.velocity.y *= -1;
+  }
+});
+ball.addColisionWithEntity(paddle, () => {
+  ball.velocity.y *= -1;
+  // the bounce angle depends on where the ball hits the paddle
+  const offset = (ball.position.x + 5) - (paddle.position.x + 50);
+  ball.velocity.x = Math.sin((offset / 50) * Math.PI / 4) * speed;
+});
+
+// --- Game logic, called on every new frame ---
+cam.onUpdate = () => {
+  const mouseX = cam.cameraMousePosition.x;
+  paddle.position.x += (mouseX - (paddle.position.x + 50)) * 0.05;
+  paddle.position.x = Math.max(0, Math.min(paddle.position.x, 1000 - 100));
+
+  if (!ballMoving) {            // the ball follows the paddle until launched
+    ball.position.x = paddle.position.x + 45;
+    ball.position.y = paddle.position.y - 10;
+  } else {
+    if (ball.position.x < 0 || ball.position.x > 990) ball.velocity.x *= -1;
+    if (ball.position.y < 0) ball.velocity.y *= -1;
+    if (ball.position.y > 600) {   // ball lost
+      ballMoving = false;
+      ball.velocity.x = 0;
+      ball.velocity.y = 0;
+    }
+  }
+};
+
+// --- Main loop ---
+function mainLoop() {
+  cam.clear();
+  scene.draw(cam);
+  cam.flipBuffer();
+  requestAnimationFrame(mainLoop);
+}
+mainLoop();
+
+// --- Launch the ball on click ---
+canvas.addEventListener("click", () => {
+  if (ballMoving) return;
+  ballMoving = true;
+  const angle = Math.random() * Math.PI / 2 + Math.PI / 4;
+  ball.velocity.x = Math.cos(angle) * speed;
+  ball.velocity.y = -Math.sin(angle) * speed;
+});
+</script>
+  </div>
+
+  <h2>Going further</h2>
+  <p>The complete example game also adds:</p>
+  <ul>
+    <li><strong>multicolored blocks</strong> with hit points, attached to entities through the second parameter of <code>Entity.create</code>;</li>
+    <li><strong>particle emitters</strong> (<code>ParticleEmitter</code>) for impacts and destructions. Particle colors must be given as hex or RGB, not as names like “blue”;</li>
+    <li>an <strong>animated score</strong> using the <code>Text</code> class, drawn on the camera through <code>camera.postProcess</code>.</li>
+  </ul>
+</main>
+<script src="../assets/nav.js"></script>
+<script src="../assets/highlight.js"></script>
+<script src="../assets/demo.js"></script>
+</body>
+</html>

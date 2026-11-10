@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Button – JSGE Documentation</title>
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body>
+<main>
+  <h1>Button</h1>
+  <p class="lead">A clickable rectangle with a text, a background, a border, rounded corners and shadows. It reacts to the mouse.</p>
+  <p>Buttons are built on the <code>Gadget</code> class, which provides everything described below (drawing, styling, mouse events). <code>Gadget</code> is not exported by <code>jsge.js</code>: use <code>Button</code>. Buttons currently have a color background only.</p>
+
+  <h2>Usage</h2>
+  <pre><code class="language-js">
+const button = Button.create("Play", { width: 200, height: 50 }, { x: 400, y: 300 });
+button.font = "28px sans-serif";
+button.backgroundColor = "#4cc9f0";
+button.borderRadius = [12];
+button.onClick = () => startGame();
+
+scene.add(button);         // or button.draw(camera) every frame
+  </code></pre>
+  <p><code>Button.create(value, dimension, position)</code> takes the text, the size <code>{width, height}</code> and the position <code>{x, y}</code> (in camera coordinates). Like other drawable objects, a button is drawn through a <a href="scene.html">Scene</a>, or with <code>button.draw(camera, zOrder = 0)</code>.</p>
+
+  <h2>Mouse events</h2>
+  <table>
+    <tr><th>Property</th><th>Called</th></tr>
+    <tr><td><code>onClick</code></td><td>When the button is clicked.</td></tr>
+    <tr><td><code>onMouseEnter(camera)</code></td><td>When the mouse enters the button.</td></tr>
+    <tr><td><code>onMouseLeave(camera)</code></td><td>When the mouse leaves it.</td></tr>
+    <tr><td><code>onMouseOver(camera)</code></td><td>On every frame while the mouse is over it.</td></tr>
+    <tr><td><code>mouseOver</code></td><td>Read-only boolean, <code>true</code> while the mouse is over the button.</td></tr>
+  </table>
+  <p>The mouse is tracked in page coordinates, with a few pixels of margin around the button, and only while it is over the camera that draws it. As for <code>cameraMousePosition</code>, the canvas should sit at the top-left of the page, without CSS scaling.</p>
+
+  <h2>Style</h2>
+  <table>
+    <tr><th>Property</th><th>Description</th></tr>
+    <tr><td><code>position</code>, <code>dimension</code></td><td><code>{x, y}</code> and <code>{width, height}</code>.</td></tr>
+    <tr><td><code>backgroundColor</code></td><td>Any CSS color. White by default.</td></tr>
+    <tr><td><code>border</code></td><td>Object <code>{ lineWidth = 1, color, style = "solid" }</code>.</td></tr>
+    <tr><td><code>borderRadius</code></td><td>An array: <code>[all]</code>, <code>[top, bottom]</code> or <code>[topLeft, topRight, bottomLeft, bottomRight]</code>, in pixels.</td></tr>
+    <tr><td><code>boxShadow</code></td><td>A shadow object <code>{ offsetX, offsetY, color, blur, inset }</code>, the same as an array <code>[offsetX, offsetY, color, blur, inset]</code>, or an array of several shadows.</td></tr>
+  </table>
+
+  <h2>Text</h2>
+  <p>The text is a <a href="text.html">Text</a>: it supports the same effect markup (colors, wave, shake, blink, gradients). It is black by default, use <code>${white …}</code> markup to color it.</p>
+  <table>
+    <tr><th>Name</th><th>Description</th></tr>
+    <tr><td><code>value</code></td><td>The text, with optional effect markup.</td></tr>
+    <tr><td><code>font</code></td><td>CSS font, for example <code>"28px sans-serif"</code>.</td></tr>
+    <tr><td><code>textAlign</code>, <code>textBaseline</code>, <code>textDirection</code></td><td>Same values as the Canvas properties.</td></tr>
+    <tr><td><code>addTextGradient(name, gradient)</code></td><td>Registers a gradient for the <code>${grad(name) …}</code> effect.</td></tr>
+    <tr><td><code>updateText()</code></td><td>Forces the text effects to update, useful after changing effect properties.</td></tr>
+  </table>
+
+  <h2>Try it</h2>
+  <p>Hover the button to change its color, and click it to change its text.</p>
+  <div class="demo" data-title="Button" data-width="1000" data-height="300" data-fixed>
+<script type="text/plain">
+import { Camera, Scene, Button } from "https://cdn.jsdelivr.net/gh/AubryBoulet/JSGE@main/JSGE/jsge.js";
+
+const canvas = document.querySelector("#gameCanvas");
+const cam = new Camera({ canvas, position: { x: 0, y: 0 }, dimensions: { width: 1000, height: 300 }, backgroundColor: "#222" });
+
+const button = Button.create("Click me", { width: 300, height: 60 }, { x: 350, y: 120 });
+button.font = "28px sans-serif";
+button.backgroundColor = "#4cc9f0";
+button.borderRadius = [14];
+button.border = { lineWidth: 3, color: "#f72585" };
+button.boxShadow = { offsetX: 6, offsetY: 6, color: "rgba(0, 0, 0, 0.5)" };
+
+let clicks = 0;
+button.onClick = () => {
+  clicks++;
+  button.value = "Clicked " + clicks + " time" + (clicks > 1 ? "s" : "");
+};
+button.onMouseEnter = () => { button.backgroundColor = "#90e0ef"; };
+button.onMouseLeave = () => { button.backgroundColor = "#4cc9f0"; };
+
+const scene = new Scene();
+scene.add(button);
+
+function mainLoop() {
+  cam.clear();
+  scene.draw(cam);
+  cam.flipBuffer();
+  requestAnimationFrame(mainLoop);
+}
+mainLoop();
+</script>
+  </div>
+</main>
+<script src="../assets/nav.js"></script>
+<script src="../assets/highlight.js"></script>
+<script src="../assets/demo.js"></script>
+</body>
+</html>

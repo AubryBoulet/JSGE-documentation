@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Camera – JSGE Documentation</title>
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body>
+<main>
+  <h1>Camera</h1>
+  <p class="lead">The camera renders your game onto a canvas. It owns the background, the frame pacing, the draw lists, child cameras, lighting, post-processing and the mouse position.</p>
+
+  <h2>Creating a camera</h2>
+  <pre><code class="language-js">
+import { Camera } from "https://cdn.jsdelivr.net/gh/AubryBoulet/JSGE@main/JSGE/jsge.js";
+
+const cam = new Camera({
+  canvas: document.querySelector("#gameCanvas"),
+  position: { x: 0, y: 0 },
+  dimensions: { width: 1000, height: 600 },
+  backgroundColor: "black"
+}, 60);   // optional second argument: target FPS
+  </code></pre>
+  <table>
+    <tr><th>Parameter</th><th>Default</th><th>Description</th></tr>
+    <tr><td><code>canvas</code></td><td>–</td><td>The canvas <em>element</em> (<code>HTMLCanvasElement</code>) the camera renders to. An error is thrown otherwise.</td></tr>
+    <tr><td><code>position</code></td><td><code>{x:0, y:0}</code></td><td>Where the camera is drawn on the canvas.</td></tr>
+    <tr><td><code>dimensions</code></td><td><code>{width:100, height:100}</code></td><td>Size of the camera view.</td></tr>
+    <tr><td><code>backgroundColor</code></td><td><code>null</code></td><td>Any CSS color. Without a background the camera is transparent.</td></tr>
+    <tr><td><code>backgroundImage</code></td><td><code>null</code></td><td>Path or URL of a background image.</td></tr>
+    <tr><td>2nd argument <code>targetFPS</code></td><td><code>60</code></td><td>Frames per second the camera tries to stabilize on.</td></tr>
+  </table>
+
+  <h2>The frame cycle</h2>
+  <p>Every frame follows the same three steps. <code>clear()</code> starts a new frame (and draws the background), then you queue what to draw, and <code>flipBuffer()</code> renders everything. Nothing is displayed without <code>flipBuffer()</code>.</p>
+  <pre><code class="language-js">
+function mainLoop() {
+  cam.clear();
+  scene.draw(cam);       // queue a scene (or entity.draw(cam))
+  cam.flipBuffer();
+  requestAnimationFrame(mainLoop);
+}
+mainLoop();
+  </code></pre>
+  <p>If less than one frame interval has elapsed since the last frame, <code>clear()</code> does nothing and <code>flipBuffer()</code> skips the rendering, so the target FPS is respected even if <code>requestAnimationFrame</code> fires more often. <code>flipBuffer()</code> returns <code>true</code> when a frame was actually rendered. Inside a rendered frame, the order is: <code>onUpdate</code>, scenes, directly drawn entities (sorted by z-order), child cameras, lights, <code>postProcess</code>, then the result is copied to the canvas.</p>
+
+  <h2>Methods</h2>
+  <table>
+    <tr><th>Method</th><th>Description</th></tr>
+    <tr><td><code>clear()</code></td><td>Starts a new frame: clears the canvas and draws the background. Also clears the child cameras.</td></tr>
+    <tr><td><code>flipBuffer()</code></td><td>Renders the queued elements. Returns <code>true</code> if a frame was rendered.</td></tr>
+    <tr><td><code>moveCamera(position, mode = "relative")</code></td><td>Moves the camera and its content on the canvas. <code>mode</code> is <code>"relative"</code> (add the offset) or <code>"absolute"</code>. It is not a scrolling solution.</td></tr>
+    <tr><td><code>drawCameraBorder(color)</code></td><td>Draws the outline of the camera, handy to debug a camera layout.</td></tr>
+    <tr><td><code>initMaskLightEngine()</code></td><td>Enables lighting on this camera and returns the <a href="maskLightEngine.html">light engine</a>.</td></tr>
+    <tr><td><code>Camera.createChildCamera(parent, position, dimensions, backgroundColor, backgroundImage)</code></td><td>Static. Creates a camera inside another one and returns it (see below).</td></tr>
+  </table>
+
+  <h2>Properties and callbacks</h2>
+  <table>
+    <tr><th>Name</th><th>Description</th></tr>
+    <tr><td><code>position</code>, <code>dimensions</code></td><td>Position on the canvas and size of the camera.</td></tr>
+    <tr><td><code>canvas</code>, <code>ctx</code></td><td>The target canvas and its 2D context.</td></tr>
+    <tr><td><code>cameraCanvas</code>, <code>cameraCtx</code></td><td>The camera’s own offscreen canvas and context, where the frame is composed. Use <code>cameraCtx</code> for custom drawing.</td></tr>
+    <tr><td><code>backgroundColor</code></td><td>Background color.</td></tr>
+    <tr><td><code>backgroundImage</code></td><td>Path or URL of the background image.</td></tr>
+    <tr><td><code>backgroundImageVelocity</code></td><td><code>{x, y}</code>: pixels the background image moves on each new frame.</td></tr>
+    <tr><td><code>backgroundImageLoop</code></td><td>Boolean, repeat the image while it moves.</td></tr>
+    <tr><td><code>backgroundImageFillStyle</code></td><td><code>"fill"</code> (stretch to the camera) or <code>"imageSize"</code> (keep the image size).</td></tr>
+    <tr><td><code>targetFPS</code></td><td>Write the wanted FPS. Reading returns the interval between frames, in milliseconds.</td></tr>
+    <tr><td><code>toleranceDelta</code></td><td>Milliseconds of tolerance used to decide a new frame is due (2 by default), to absorb the imprecision of <code>requestAnimationFrame</code>.</td></tr>
+    <tr><td><code>onUpdate</code></td><td>Function called on every new frame, just before drawing. The right place for game logic.</td></tr>
+    <tr><td><code>postProcess</code></td><td>Function called with the camera after everything is drawn, before the frame reaches the canvas. Anything drawn on <code>cameraCtx</code> there ends up on top of the scene: HUD, filters…</td></tr>
+    <tr><td><code>onMouseMouve</code></td><td>Function called with the mouse position when the mouse moves over the camera. (Spelled this way in the engine.)</td></tr>
+    <tr><td><code>cameraMousePosition</code></td><td>Read-only <code>{x, y}</code>: the last mouse position over the camera, relative to it. It stays at <code>{0, 0}</code> until the mouse has moved over the camera.</td></tr>
+    <tr><td><code>Camera.cameras</code>, <code>Camera.mousePosition</code></td><td>Static: every camera created so far, and the last mouse position in page coordinates.</td></tr>
+  </table>
+  <p><strong>Mouse position.</strong> The camera computes the mouse position from page coordinates (<code>pageX</code>, <code>pageY</code>) minus its own <code>position</code>. For exact values, the canvas should sit at the top-left corner of the page, and CSS scaling of the canvas should be avoided.</p>
+
+  <h2>Child cameras</h2>
+  <p><code>Camera.createChildCamera(parent, position, dimensions, backgroundColor, backgroundImage)</code> creates a camera inside a parent camera. Its <code>position</code> is relative to the parent, and it must fit inside it (an error is thrown otherwise). The parent clears its children, and they are rendered with it on every frame, but they never clear the canvas themselves.</p>
+  <p>A child camera is drawn inside its parent camera’s canvas, after the parent’s own elements and before the lights and <code>postProcess</code>. It therefore covers whatever the parent drew behind it, and anything drawn in the parent’s <code>postProcess</code> ends up on top of it. Child cameras are handy for minimaps, split views, UI panels or parallax layers.</p>
+
+  <h2>Lighting</h2>
+  <p>Lights are managed by the camera: <code>camera.initMaskLightEngine()</code> returns a light engine bound to that camera. Everything about it is on the <a href="maskLightEngine.html">Light engine</a> page.</p>
+
+  <h2>Try it</h2>
+  <p>A main camera, a child camera drawn on top of it, a square following the mouse and a button. The square is covered by the child camera, and <code>postProcess</code> redraws the covered part in yellow. Click the button to toggle that overlay.</p>
+  <div class="demo" data-title="Child camera, onUpdate, postProcess and Button" data-width="1000" data-height="600" data-fixed>
+<script type="text/plain">
+import { Camera, Sprite, Scene, Entity, Button } from "https://cdn.jsdelivr.net/gh/AubryBoulet/JSGE@main/JSGE/jsge.js";
+
+const canvas = document.querySelector("#gameCanvas");
+
+// Main camera, with a black background
+const cam = new Camera({ canvas, position: { x: 0, y: 0 }, dimensions: { width: 1000, height: 600 }, backgroundColor: "#000" });
+
+// Child camera: a 600x400 window, 200px from the left and 100px from the top.
+// It is drawn inside the main camera, on top of its elements.
+const childCam = Camera.createChildCamera(cam, { x: 200, y: 100 }, { width: 600, height: 400 }, "#1d3557");
+
+let showOverlap = true;
+
+const squareSprite = Sprite.create(40, 40);
+squareSprite.ctx.fillStyle = "#e63946";
+squareSprite.ctx.fillRect(0, 0, 40, 40);
+const square = Entity.create({ sprite: squareSprite, position: { x: 480, y: 280 } });
+
+const toggleButton = Button.create("Toggle Post Process", { width: 200, height: 40 }, { x: 10, y: 10 });
+toggleButton.onClick = () => {
+  showOverlap = !showOverlap;
+};
+
+const scene = new Scene();
+scene.add(square);
+scene.add(toggleButton);
+
+// onUpdate: called on every new frame, just before drawing
+cam.onUpdate = () => {
+  const mouse = cam.cameraMousePosition;
+  if (mouse.x || mouse.y) {   // stays at (0, 0) until the mouse has moved
+    square.position.x = mouse.x - 20;
+    square.position.y = mouse.y - 20;
+  }
+};
+
+// postProcess: draws directly on the camera, on top of everything
+cam.postProcess = (camera) => {
+  camera.cameraCtx.strokeStyle = "white";
+  camera.cameraCtx.strokeRect(1, 1, camera.dimensions.width - 2, camera.dimensions.height - 2);
+
+  if (showOverlap) {
+    // Intersection between the square and the child camera: the part hidden by the child camera
+    const left = Math.max(square.position.x, childCam.position.x);
+    const top = Math.max(square.position.y, childCam.position.y);
+    const right = Math.min(square.position.x + 40, childCam.position.x + childCam.dimensions.width);
+    const bottom = Math.min(square.position.y + 40, childCam.position.y + childCam.dimensions.height);
+    if (right > left && bottom > top) {
+      camera.cameraCtx.fillStyle = "yellow";
+      camera.cameraCtx.fillRect(left, top, right - left, bottom - top);
+    }
+  }
+};
+
+function mainLoop() {
+  cam.clear();
+  scene.draw(cam);
+  cam.flipBuffer();
+  requestAnimationFrame(mainLoop);
+}
+mainLoop();
+</script>
+  </div>
+</main>
+<script src="../assets/nav.js"></script>
+<script src="../assets/highlight.js"></script>
+<script src="../assets/demo.js"></script>
+</body>
+</html>

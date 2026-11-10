@@ -1,0 +1,45 @@
+:root{--bg:#fff;--fg:#1b2230;--mut:#5b667a;--card:#f4f6fa;--bd:#dde2ea;--acc:#166088;--warn:#a15c00;--ok:#1a7f4b;color-scheme:light}
+@media (prefers-color-scheme:dark){:root:not([data-theme=light]){--bg:#12161c;--fg:#e6e9ef;--mut:#98a2b3;--card:#1a2029;--bd:#2a3340;--acc:#5cb3e6;--warn:#f0b45a;--ok:#4ac98a;color-scheme:dark}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);font:16px/1.65 system-ui,-apple-system,"Segoe UI",sans-serif;display:grid;grid-template-columns:260px minmax(0,1fr);min-height:100vh}
+a{color:var(--acc)}
+#nav{position:sticky;top:0;height:100vh;overflow:auto;padding:1.2rem 1rem;border-right:1px solid var(--bd);background:var(--card)}
+#nav .brand{display:block;font-weight:700;font-size:1.2rem;color:var(--fg);text-decoration:none;margin-bottom:1rem}
+#nav h4{margin:1.1rem 0 .3rem;font-size:.72rem;letter-spacing:.08em;text-transform:uppercase;color:var(--mut)}
+#nav a.i,#nav span.i{display:block;padding:.28rem .6rem;border-radius:6px;text-decoration:none;color:var(--fg);font-size:.95rem}
+#nav a.i:hover{background:var(--bd)}
+#nav a.on{background:var(--acc);color:#fff}
+#nav span.i{color:var(--mut);opacity:.7}
+#nav span.i::after{content:" · soon";font-size:.75rem}
+#tg{display:none}
+main{--pad:2.2rem;box-sizing:border-box;width:100%;max-width:calc(1000px + 2 * var(--pad));margin:0 auto;padding:2rem var(--pad) 4rem}
+h1{font-size:2.3rem;margin:.2rem 0 .4rem}
+h2{margin:2.4rem 0 .6rem;padding-top:.4rem;border-top:1px solid var(--bd)}
+.lead{font-size:1.15rem;color:var(--mut)}
+.badge{display:inline-block;padding:.1rem .6rem;border-radius:99px;background:var(--card);border:1px solid var(--bd);font-size:.8rem;margin-right:.3rem}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:.9rem}
+.card{background:var(--card);border:1px solid var(--bd);border-radius:10px;padding:.9rem 1rem}
+.card h3{margin:0 0 .3rem;font-size:1.05rem}.card p{margin:0;color:var(--mut);font-size:.93rem}
+.cols{display:grid;grid-template-columns:1fr 1fr;gap:1rem}
+.do,.dont{border-left:4px solid;padding:.2rem 1rem;border-radius:4px;background:var(--card)}
+.do{border-color:var(--ok)}.dont{border-color:var(--warn)}
+.chips a,.chips span{display:inline-block;margin:.15rem;padding:.15rem .7rem;border:1px solid var(--bd);border-radius:6px;font-family:ui-monospace,Menlo,monospace;font-size:.9rem;text-decoration:none}
+table{border-collapse:collapse;width:100%}th,td{border:1px solid var(--bd);padding:.4rem .7rem;text-align:left}th{background:var(--card)}
+code{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:.9em}
+:not(pre)>code{background:var(--card);padding:.1rem .35rem;border-radius:4px}
+pre{background:#0f1720;color:#e6edf3;padding:1rem;border-radius:10px;overflow-x:auto;line-height:1.5}
+.tk-c{color:#8b98a9;font-style:italic}.tk-s{color:#a5d6a7}.tk-k{color:#ff9e80}.tk-n{color:#82aaff}.tk-f{color:#ffd166}.tk-t{color:#7ee0e0}.tk-cl{color:#c3a6ff}
+.demo{box-shadow:0 0 0 1px var(--bd);border-radius:10px;overflow:hidden}
+.demo header{display:flex;gap:.5rem;align-items:center;padding:.5rem .8rem;background:var(--card);border-bottom:1px solid var(--bd)}
+.demo header b{flex:1}.demo button{font:inherit;padding:.25rem .9rem;border:1px solid var(--bd);border-radius:6px;background:var(--bg);color:var(--fg);cursor:pointer}
+.demo button.run{background:var(--acc);color:#fff;border-color:var(--acc)}
+.demo textarea{width:100%;height:230px;border:0;border-bottom:1px solid var(--bd);padding:.8rem;background:#0f1720;color:#e6edf3;font:13px/1.5 ui-monospace,Menlo,monospace;resize:vertical}
+.demo iframe{width:100%;aspect-ratio:4/3;border:0;display:block;background:#000}
+footer{margin-top:3rem;color:var(--mut);font-size:.9rem}
+@media (max-width:820px){
+ body{grid-template-columns:1fr}
+ #nav{position:fixed;inset:0 25% 0 0;height:auto;z-index:5;transform:translateX(-101%);transition:transform .2s}
+ #nav.open{transform:none}
+ #tg{display:block;position:fixed;top:.6rem;right:.6rem;z-index:6;padding:.4rem .8rem;border-radius:8px;border:1px solid var(--bd);background:var(--card);color:var(--fg);font:inherit}
+ main{padding:3.2rem 1.1rem 3rem}.cols{grid-template-columns:1fr}
+}

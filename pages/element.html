@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Element – JSGE Documentation</title>
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body>
+<main>
+  <h1>Element</h1>
+  <p class="lead">An element is a static piece of scenery: a sprite with a position and a scale. It is lighter than an <a href="entity.html">Entity</a> because it has no velocity and no collision detection.</p>
+
+  <h2>Creating an element</h2>
+  <pre><code class="language-js">
+const platform = Element.create({
+  sprite: platformSprite,
+  position: { x: 200, y: 400 },
+  scale: 2
+});
+scene.add(platform);
+  </code></pre>
+  <p>An element is drawn through a <a href="scene.html">Scene</a>. It never moves or updates by itself: change <code>position</code> from your own code (for instance in <code>camera.onUpdate</code>) if you want it to move. It cannot use an animated sprite (an error is thrown).</p>
+  <p><code>Element.create(data, assigns)</code> accepts, like entities, an array of objects whose properties and methods are copied onto the element, and <code>element.assign(objects, { overwrite })</code> does the same later.</p>
+
+  <h2>Properties</h2>
+  <table>
+    <tr><th>Name</th><th>Default</th><th>Description</th></tr>
+    <tr><td><code>sprite</code></td><td>–</td><td>The <a href="sprite.html">Sprite</a> to draw.</td></tr>
+    <tr><td><code>position</code></td><td><code>{x:0, y:0}</code></td><td>Top-left corner of the element.</td></tr>
+    <tr><td><code>scale</code></td><td><code>1</code></td><td>Size multiplier of the sprite.</td></tr>
+    <tr><td><code>flippedX</code>, <code>flippedY</code></td><td>–</td><td>Booleans: mirror the element horizontally or vertically.</td></tr>
+    <tr><td><code>onGravityContact</code></td><td>–</td><td>Function called as <code>onGravityContact(element, entity)</code> on every frame an entity affected by gravity stands on the element. Elements added to a scene are registered as ground for those entities.</td></tr>
+  </table>
+
+  <h2>Try it</h2>
+  <p>Clouds are elements. They have no velocity, so the code moves them manually in <code>onUpdate</code>.</p>
+  <div class="demo" data-title="Elements moved by onUpdate" data-width="1000" data-height="400">
+<script type="text/plain">
+import { Camera, Sprite, Scene, Element } from "https://cdn.jsdelivr.net/gh/AubryBoulet/JSGE@main/JSGE/jsge.js";
+
+const canvas = document.querySelector("#gameCanvas");
+const cam = new Camera({ canvas, position: { x: 0, y: 0 }, dimensions: { width: 1000, height: 400 }, backgroundColor: "#8ecae6" });
+
+// A cloud drawn with three circles
+const cloudSprite = Sprite.create(120, 50);
+cloudSprite.ctx.fillStyle = "white";
+[[30, 30, 20], [60, 22, 24], [92, 30, 18]].forEach(([x, y, r]) => {
+  cloudSprite.ctx.beginPath();
+  cloudSprite.ctx.arc(x, y, r, 0, 2 * Math.PI);
+  cloudSprite.ctx.fill();
+});
+
+const scene = new Scene();
+const clouds = [];
+for (let i = 0; i < 6; i++) {
+  const cloud = Element.create({ sprite: cloudSprite, position: { x: i * 190, y: 40 + (i % 3) * 110 }, scale: 0.6 + (i % 3) * 0.4 });
+  cloud.flippedX = i % 2 === 0;       // mirror some of them
+  clouds.push(cloud);
+  scene.add(cloud);
+}
+
+// Elements never move by themselves: bigger (closer) clouds go faster
+cam.onUpdate = () => {
+  clouds.forEach((cloud) => {
+    cloud.position.x -= 0.4 + cloud.scale * 0.8;
+    if (cloud.position.x < -120 * cloud.scale) cloud.position.x = 1000;
+  });
+};
+
+function mainLoop() {
+  cam.clear();
+  scene.draw(cam);
+  cam.flipBuffer();
+  requestAnimationFrame(mainLoop);
+}
+mainLoop();
+</script>
+  </div>
+</main>
+<script src="../assets/nav.js"></script>
+<script src="../assets/highlight.js"></script>
+<script src="../assets/demo.js"></script>
+</body>
+</html>

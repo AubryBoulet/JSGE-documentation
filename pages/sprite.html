@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Sprite – JSGE Documentation</title>
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body>
+<main>
+  <h1>Sprite</h1>
+  <p class="lead">A sprite is the image of a game object. It can be loaded from a file, or drawn by code on its own canvas.</p>
+
+  <h2>Drawing a sprite by code</h2>
+  <p><code>Sprite.create(width, height)</code> returns an empty sprite backed by its own canvas. Draw on it with <code>sprite.ctx</code>, using the usual Canvas 2D methods, then give it to entities or elements. No image file is needed.</p>
+  <pre><code class="language-js">
+const ball = Sprite.create(10, 10);
+ball.ctx.fillStyle = "white";
+ball.ctx.arc(5, 5, 5, 0, 2 * Math.PI);
+ball.ctx.fill();
+
+const player = Entity.create({ sprite: ball, position: { x: 100, y: 100 } });
+  </code></pre>
+
+  <h2>Loading an image</h2>
+  <p><code>Sprite.load(imageSrc, animate)</code> is asynchronous: it returns a promise that resolves with the sprite once the image has loaded, and rejects if it fails.</p>
+  <pre><code class="language-js">
+const hero = await Sprite.load("images/hero.png");
+  </code></pre>
+
+  <h2>Static methods</h2>
+  <table>
+    <tr><th>Method</th><th>Description</th></tr>
+    <tr><td><code>Sprite.create(width, height, animate)</code></td><td>Creates a sprite drawn by code, with its own canvas.</td></tr>
+    <tr><td><code>Sprite.load(imageSrc, animate)</code></td><td>Loads an image file. Returns a promise.</td></tr>
+  </table>
+  <p>The <code>animate</code> argument turns the sprite into an animated sprite sheet. See the <a href="animation.html">Animation</a> page.</p>
+
+  <h2>Properties</h2>
+  <table>
+    <tr><th>Name</th><th>Description</th></tr>
+    <tr><td><code>image</code></td><td>The underlying image or canvas.</td></tr>
+    <tr><td><code>ctx</code></td><td>Read-only 2D context, only for sprites made with <code>Sprite.create()</code>.</td></tr>
+    <tr><td><code>width</code>, <code>height</code></td><td>Size of the sprite in pixels (before the entity’s <code>scale</code> is applied).</td></tr>
+    <tr><td><code>imageLoaded</code></td><td>Boolean, <code>true</code> once the image is ready.</td></tr>
+    <tr><td><code>animate</code>, <code>animations</code></td><td>Whether the sprite is animated, and its <a href="animation.html">animation settings</a>.</td></tr>
+  </table>
+
+  <h2>Try it</h2>
+  <p>Sprites drawn by code, displayed with different scales and a mirrored copy.</p>
+  <div class="demo" data-title="Sprite.create, scale and flippedX" data-width="800" data-height="400">
+<script type="text/plain">
+import { Camera, Sprite, Scene, Entity } from "https://cdn.jsdelivr.net/gh/AubryBoulet/JSGE@main/JSGE/jsge.js";
+
+const canvas = document.querySelector("#gameCanvas");
+const cam = new Camera({ canvas, position: { x: 0, y: 0 }, dimensions: { width: 800, height: 400 }, backgroundColor: "#222" });
+
+// A star, drawn with the Canvas 2D API
+const star = Sprite.create(60, 60);
+star.ctx.fillStyle = "#ffd166";
+star.ctx.beginPath();
+for (let i = 0; i < 10; i++) {
+  const radius = i % 2 ? 12 : 28;
+  const angle = i * Math.PI / 5 - Math.PI / 2;
+  star.ctx.lineTo(30 + radius * Math.cos(angle), 30 + radius * Math.sin(angle));
+}
+star.ctx.closePath();
+star.ctx.fill();
+
+// An arrow pointing right
+const arrow = Sprite.create(80, 40);
+arrow.ctx.fillStyle = "#06d6a0";
+arrow.ctx.beginPath();
+arrow.ctx.moveTo(0, 10);
+arrow.ctx.lineTo(50, 10);
+arrow.ctx.lineTo(50, 0);
+arrow.ctx.lineTo(80, 20);
+arrow.ctx.lineTo(50, 40);
+arrow.ctx.lineTo(50, 30);
+arrow.ctx.lineTo(0, 30);
+arrow.ctx.closePath();
+arrow.ctx.fill();
+
+const scene = new Scene();
+// The same sprite, three scales
+scene.add(Entity.create({ sprite: star, position: { x: 60, y: 60 }, scale: 1 }));
+scene.add(Entity.create({ sprite: star, position: { x: 160, y: 60 }, scale: 2 }));
+scene.add(Entity.create({ sprite: star, position: { x: 320, y: 60 }, scale: 3 }));
+// Normal and mirrored
+scene.add(Entity.create({ sprite: arrow, position: { x: 100, y: 300 } }));
+const mirrored = Entity.create({ sprite: arrow, position: { x: 300, y: 300 } });
+mirrored.flippedX = true;
+scene.add(mirrored);
+
+function mainLoop() {
+  cam.clear();
+  scene.draw(cam);
+  cam.flipBuffer();
+  requestAnimationFrame(mainLoop);
+}
+mainLoop();
+</script>
+  </div>
+</main>
+<script src="../assets/nav.js"></script>
+<script src="../assets/highlight.js"></script>
+<script src="../assets/demo.js"></script>
+</body>
+</html>

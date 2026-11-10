@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Transition – JSGE Documentation</title>
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body>
+<main>
+  <h1>Transition</h1>
+  <p class="lead">Smoothly animates a number from one value to another, using an easing function. Perfect for movements, fades, scaling or any value that should not just jump.</p>
+
+  <h2>Usage</h2>
+  <p><code>Transition.create()</code> takes a single array and returns the id of the transition. Your callback receives the current value on every frame.</p>
+  <pre><code class="language-js">
+const id = Transition.create([
+  0,                          // initial value
+  500,                        // target value
+  "easeOutBounce",            // timing function (default "linear")
+  (value) => { box.position.x = value; },   // called on every frame
+  2,                          // duration in seconds (default 1)
+  0.5,                        // delay in seconds (default 0)
+  () => { box.position.x = 500; }           // optional: called when finished
+]);
+  </code></pre>
+  <p>Transitions run on their own animation loop, independently from cameras. The loop sleeps when no transition is running. Setting the exact final value in the end callback is a good habit, as the last frame can land slightly past the target.</p>
+
+  <h2>Array items</h2>
+  <table>
+    <tr><th>#</th><th>Item</th><th>Default</th><th>Description</th></tr>
+    <tr><td>1</td><td>initial value</td><td>–</td><td>Starting number.</td></tr>
+    <tr><td>2</td><td>target value</td><td>–</td><td>Final number.</td></tr>
+    <tr><td>3</td><td>timing function</td><td><code>"linear"</code></td><td>The name of an easing function (see below) or a custom function <code>(t, b, c, d) => value</code> where <code>t</code> is the elapsed time and <code>d</code> the duration in milliseconds, <code>b</code> the initial value and <code>c</code> the change in value (target − initial).</td></tr>
+    <tr><td>4</td><td>callback</td><td>none</td><td>Called with the current value on every frame.</td></tr>
+    <tr><td>5</td><td>duration</td><td><code>1</code></td><td>In seconds.</td></tr>
+    <tr><td>6</td><td>delay</td><td><code>0</code></td><td>In seconds, before the transition starts.</td></tr>
+    <tr><td>7</td><td>end callback</td><td>none</td><td>Called once, when the transition is over.</td></tr>
+  </table>
+
+  <h2>Static methods</h2>
+  <table>
+    <tr><th>Method</th><th>Description</th></tr>
+    <tr><td><code>Transition.create(array)</code></td><td>Starts a transition and returns its id. An unknown easing name throws an error.</td></tr>
+    <tr><td><code>Transition.delete(id)</code></td><td>Cancels one transition.</td></tr>
+    <tr><td><code>Transition.clear()</code></td><td>Cancels every transition.</td></tr>
+    <tr><td><code>Transition.reset(id)</code></td><td>Restarts a transition from the beginning (the delay applies again).</td></tr>
+  </table>
+
+  <h2>Easing functions</h2>
+  <p><code>"linear"</code>, plus the three variants <code>easeIn…</code>, <code>easeOut…</code> and <code>easeInOut…</code> of each of these families:</p>
+  <div class="chips">
+    <span>Quad</span><span>Cubic</span><span>Quart</span><span>Quint</span><span>Sine</span><span>Expo</span><span>Circ</span><span>Elastic</span><span>Back</span><span>Bounce</span>
+  </div>
+  <p>For example <code>"easeOutQuad"</code>, <code>"easeInOutCubic"</code> or <code>"easeOutBounce"</code>.</p>
+
+  <h2>Try it</h2>
+  <p>Click the canvas to start five transitions at once, each with a different easing function.</p>
+  <div class="demo" data-title="Easing functions" data-width="1000" data-height="600">
+<script type="text/plain">
+import { Camera, Sprite, Scene, Entity, Transition } from "https://cdn.jsdelivr.net/gh/AubryBoulet/JSGE@main/JSGE/jsge.js";
+
+const canvas = document.querySelector("#gameCanvas");
+const cam = new Camera({ canvas, position: { x: 0, y: 0 }, dimensions: { width: 1000, height: 600 }, backgroundColor: "#1b1b2f" });
+
+const names = ["linear", "easeInOutQuad", "easeOutBounce", "easeOutElastic", "easeInBack"];
+const colors = ["#e63946", "#f4a261", "#2a9d8f", "#4cc9f0", "#b5179e"];
+
+const scene = new Scene();
+const squares = names.map((name, i) => {
+  const sprite = Sprite.create(50, 50);
+  sprite.ctx.fillStyle = colors[i];
+  sprite.ctx.fillRect(0, 0, 50, 50);
+  const square = Entity.create({ sprite, position: { x: 250, y: 50 + i * 105 } });
+  scene.add(square);
+  return square;
+});
+
+canvas.addEventListener("click", () => {
+  names.forEach((name, i) => {
+    Transition.create([
+      250, 900, name,
+      (value) => { squares[i].position.x = value; },
+      2, 0,
+      () => { squares[i].position.x = 900; }        // exact final value
+    ]);
+  });
+});
+
+cam.postProcess = (camera) => {
+  camera.cameraCtx.fillStyle = "white";
+  camera.cameraCtx.font = "20px sans-serif";
+  names.forEach((name, i) => camera.cameraCtx.fillText(name, 20, 85 + i * 105));
+  camera.cameraCtx.fillText("Click to start", 20, 580);
+};
+
+function mainLoop() {
+  cam.clear();
+  scene.draw(cam);
+  cam.flipBuffer();
+  requestAnimationFrame(mainLoop);
+}
+mainLoop();
+</script>
+  </div>
+</main>
+<script src="../assets/nav.js"></script>
+<script src="../assets/highlight.js"></script>
+<script src="../assets/demo.js"></script>
+</body>
+</html>

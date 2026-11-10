@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Animation – JSGE Documentation</title>
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body>
+<main>
+  <h1>Animation</h1>
+  <p class="lead">Animated sprites are built from a sprite sheet: one image containing the frames of one or several animations, laid out in a grid.</p>
+  <p>The animation settings live in the sprite’s <code>animations</code> object. The class itself is not exported by <code>jsge.js</code>: you reach it through <code>sprite.animations</code>.</p>
+
+  <h2>Usage</h2>
+  <pre><code class="language-js">
+// 1. Load the sprite sheet with animate = true
+const sheet = await Sprite.load("images/hero-sheet.png", true);
+
+// 2. Describe the grid: 2 rows of 4 frames
+sheet.animations.row = 2;
+sheet.animations.column = 4;
+
+// 3. Declare the animations: first frame, last frame, name, frameRate
+sheet.animations.createAnimationFrames(0, 3, "idle", 10);
+sheet.animations.createAnimationFrames(4, 7, "run", 5);
+
+// 4. Choose the animation of each entity
+const hero = Entity.create({ sprite: sheet, position: { x: 100, y: 100 } });
+hero.currentAnimation = "idle";
+  </code></pre>
+  <p>Frames are numbered from 0, left to right then top to bottom. The size of a frame is computed from the image size and the <code>row</code> and <code>column</code> counts. Every entity using an animated sprite must have a <code>currentAnimation</code> before it is updated, otherwise an error is thrown. Each entity keeps its own copy of the animation state, so entities can share a sprite sheet while playing different animations or being on different frames.</p>
+
+  <h2>Frame rate</h2>
+  <p>The <code>frameRate</code> of an animation is the number of game frames each picture stays on screen. With a camera running at 60 FPS, <code>frameRate = 6</code> plays 10 pictures per second. An entity can change its own speed with <code>entity.frameRate = 3</code>.</p>
+
+  <h2>Methods and properties</h2>
+  <table>
+    <tr><th>Name</th><th>Description</th></tr>
+    <tr><td><code>row</code>, <code>column</code></td><td>Number of rows and columns of the sprite sheet. Setting them recomputes the size of a frame.</td></tr>
+    <tr><td><code>frameWidth</code>, <code>frameHeight</code></td><td>Size of a frame in pixels. Computed from the image and the grid, but you can set them.</td></tr>
+    <tr><td><code>createAnimationFrames(startFrame, endFrame, animationName, frameRate = 1, frameWidth, frameHeight)</code></td><td>Declares an animation made of the frames from <code>startFrame</code> to <code>endFrame</code> (both included). The optional sizes override the default frame size for this animation.</td></tr>
+    <tr><td><code>setAnimationFrameHitBox(animationName, startWidth, endWidth, startHeight, endHeight)</code></td><td>Sets the hit box of an animation, in pixels inside a frame. It is used for entity collisions and for landing on elements with gravity. The default hit box covers the whole frame.</td></tr>
+    <tr><td><code>getAnimationFrame(animationName)</code></td><td>Returns a copy of the animation data (<code>frames</code>, <code>frameRate</code>, <code>frameWidth</code>, <code>frameHeight</code>, <code>frameHitBox</code>…). Throws an error for an unknown name. This is what <code>entity.currentAnimation</code> uses.</td></tr>
+    <tr><td><code>image</code></td><td>The sprite sheet image.</td></tr>
+  </table>
+
+  <h2>Hit boxes</h2>
+  <p>A character is rarely as wide as its frame. Shrink the hit box so that collisions match the drawing:</p>
+  <pre><code class="language-js">
+// frames are 64x64, the character occupies x: 16..48 and y: 8..64
+sheet.animations.setAnimationFrameHitBox("idle", 16, 48, 8, 64);
+  </code></pre>
+
+  <h2>Try it</h2>
+  <p>The sprite sheet is drawn by code (2 rows of 4 frames) and loaded from a data URL. Click the canvas to switch between the two animations.</p>
+  <div class="demo" data-title="Sprite sheet and currentAnimation" data-width="800" data-height="400">
+<script type="text/plain">
+import { Camera, Sprite, Scene, Entity } from "https://cdn.jsdelivr.net/gh/AubryBoulet/JSGE@main/JSGE/jsge.js";
+
+const canvas = document.querySelector("#gameCanvas");
+const cam = new Camera({ canvas, position: { x: 0, y: 0 }, dimensions: { width: 800, height: 400 }, backgroundColor: "#222" });
+
+// A sprite sheet drawn by code: 4 columns x 2 rows of 60x60 frames
+const sheetCanvas = document.createElement("canvas");
+sheetCanvas.width = 240;
+sheetCanvas.height = 120;
+const g = sheetCanvas.getContext("2d");
+for (let i = 0; i < 8; i++) {
+  const col = i % 4;
+  const row = Math.floor(i / 4);
+  g.save();
+  g.translate(col * 60 + 30, row * 60 + 30);
+  if (row === 0) {                          // row 0: a pulsing circle
+    g.fillStyle = "#4cc9f0";
+    g.beginPath();
+    g.arc(0, 0, [14, 18, 22, 18][col], 0, 2 * Math.PI);
+    g.fill();
+  } else {                                  // row 1: a turning square
+    g.fillStyle = "#f72585";
+    g.rotate(col * Math.PI / 8);
+    g.fillRect(-18, -18, 36, 36);
+  }
+  g.restore();
+}
+
+const sheet = await Sprite.load(sheetCanvas.toDataURL(), true);
+sheet.animations.row = 2;
+sheet.animations.column = 4;
+sheet.animations.createAnimationFrames(0, 3, "pulse", 8);
+sheet.animations.createAnimationFrames(4, 7, "spin", 5);
+
+const hero = Entity.create({ sprite: sheet, position: { x: 310, y: 110 }, scale: 3 });
+hero.currentAnimation = "pulse";
+
+const scene = new Scene();
+scene.add(hero);
+
+let current = "pulse";
+canvas.addEventListener("click", () => {
+  current = current === "pulse" ? "spin" : "pulse";
+  hero.currentAnimation = current;
+});
+
+function mainLoop() {
+  cam.clear();
+  scene.draw(cam);
+  cam.flipBuffer();
+  requestAnimationFrame(mainLoop);
+}
+mainLoop();
+</script>
+  </div>
+</main>
+<script src="../assets/nav.js"></script>
+<script src="../assets/highlight.js"></script>
+<script src="../assets/demo.js"></script>
+</body>
+</html>

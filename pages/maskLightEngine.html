@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Light engine – JSGE Documentation</title>
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body>
+<main>
+  <h1>Light engine</h1>
+  <p class="lead">A basic mask-based lighting system, managed directly by the camera. It darkens the whole view, then cuts light-shaped holes in the darkness.</p>
+  <p>This is a lightweight effect: there is no shadow casting yet (a raycasting-based system is planned). The light engine uses several canvases, so keep the number of lights reasonable.</p>
+
+  <h2>Enabling lights</h2>
+  <p>The light engine is created by the camera. <code>camera.initMaskLightEngine()</code> builds a mask the size of the camera and returns the engine. The camera then renders the lights on every frame, after the scene and before <code>postProcess</code>. The engine and light classes are not exported by <code>jsge.js</code>: you only use the objects returned by these calls.</p>
+  <pre><code class="language-js">
+const lights = cam.initMaskLightEngine();
+lights.mask = { color: "rgba(0, 0, 0, 0.9)" };      // darkness level
+
+const torch = lights.addLightEmitter(500, 300, 120, "rgba(255, 170, 60, 0.25)");
+torch.x = 520;                                       // lights can move
+  </code></pre>
+  <p>The mask is black and opaque by default. Lower its alpha to let part of the scene show through the darkness. Light positions are in camera coordinates.</p>
+
+  <h2>Drawing above the lights</h2>
+  <p>By default everything is drawn below the darkness. To keep some elements bright (a lamp, a HUD, a character carrying a torch…), give the light engine a <code>zOrder</code> and add those elements with a higher one:</p>
+  <pre><code class="language-js">
+lights.zOrder = 9;
+scene.add(tile);          // zOrder 0: under the darkness
+scene.add(lamp, 20);      // zOrder 20: drawn above the mask and the lights
+  </code></pre>
+
+  <h2>Light engine</h2>
+  <table>
+    <tr><th>Member</th><th>Description</th></tr>
+    <tr><td><code>addLightEmitter(x, y, radius, color = null)</code></td><td>Creates a light and returns it. <code>color</code> is an optional CSS color used to tint the lit area, give it some transparency.</td></tr>
+    <tr><td><code>removeLightEmitter(emitter)</code></td><td>Removes a light.</td></tr>
+    <tr><td><code>getLightEmitters()</code></td><td>Returns the array of lights.</td></tr>
+    <tr><td><code>mask</code></td><td>Setter taking an object with any of <code>x</code>, <code>y</code>, <code>width</code>, <code>height</code> and <code>color</code> (the mask color, including its transparency). Omitted or zero values keep their current value.</td></tr>
+    <tr><td><code>zOrder</code></td><td>Depth of the light layer. Elements drawn with a higher <code>zOrder</code> (<code>scene.add(element, zOrder)</code> or <code>draw(camera, zOrder)</code>) are drawn above the mask and the lights, the others below. Assign it explicitly, see below.</td></tr>
+    <tr><td><code>getRenderCtx()</code></td><td>The 2D context of the canvas the lights are composed on.</td></tr>
+  </table>
+
+  <h2>Light emitter</h2>
+  <table>
+    <tr><th>Property</th><th>Description</th></tr>
+    <tr><td><code>x</code>, <code>y</code></td><td>Center of the light.</td></tr>
+    <tr><td><code>radius</code></td><td>Radius of the lit area, in pixels.</td></tr>
+    <tr><td><code>color</code></td><td>Tint color of the lit area (CSS color).</td></tr>
+    <tr><td><code>angleRange</code></td><td>Opening of the light in degrees. <code>360</code> (default) is a full circle, a smaller value makes a cone.</td></tr>
+    <tr><td><code>lookAt</code></td><td>For cones: the <code>{x, y}</code> point the cone faces (it cannot be <code>{x: 0, y: 0}</code>). The direction is computed when <code>lookAt</code> is set, so set it again after moving the light. Read the resulting angle, in radians, with <code>lineAngle</code>.</td></tr>
+  </table>
+
+  <p>A light also has a method to shade its tint with a radial gradient:</p>
+  <table>
+    <tr><th>Method</th><th>Description</th></tr>
+    <tr><td><code>createGradient(r0, r1, stops)</code></td><td>Sets the tint of the light to a radial gradient centered on it. <code>r0</code> and <code>r1</code> are the inner and outer radii in pixels, and <code>stops</code> is an array of <code>[offset, color]</code> pairs, with an offset between 0 and 1.</td></tr>
+  </table>
+  <pre><code class="language-js">
+torch.createGradient(0, 130, [
+  [0, "rgba(255, 200, 100, 0.5)"],
+  [1, "rgba(255, 200, 100, 0)"]
+]);
+  </code></pre>
+
+  <h2>Try it</h2>
+  <p>A warm light follows the mouse and a blue lamp stays in place. The small yellow dot is added with a higher <code>zOrder</code> than the light engine, so it stays bright above the darkness.</p>
+  <div class="demo" data-title="Mask light engine" data-width="1000" data-height="600" data-fixed>
+<script type="text/plain">
+import { Camera, Sprite, Scene, Element } from "https://cdn.jsdelivr.net/gh/AubryBoulet/JSGE@main/JSGE/jsge.js";
+
+const canvas = document.querySelector("#gameCanvas");
+const cam = new Camera({ canvas, position: { x: 0, y: 0 }, dimensions: { width: 1000, height: 600 }, backgroundColor: "#2d6a4f" });
+
+// Some scenery to light up: a grid of tiles
+const tile = Sprite.create(80, 80);
+tile.ctx.fillStyle = "#95d5b2";
+tile.ctx.fillRect(2, 2, 76, 76);
+const scene = new Scene();
+for (let row = 0; row < 8; row++) {
+  for (let col = 0; col < 13; col++) {
+    scene.add(Element.create({ sprite: tile, position: { x: col * 80, y: row * 80 } }));
+  }
+}
+
+// Enable lighting on the camera and darken the view
+const lights = cam.initMaskLightEngine();
+lights.mask = { color: "rgba(0, 0, 0, 0.92)" };
+
+const torch = lights.addLightEmitter(500, 300, 130, "rgba(255, 170, 60, 0.25)");
+lights.addLightEmitter(200, 450, 90, "rgba(80, 160, 255, 0.25)");
+
+// Elements added with a zOrder above the light engine's one are drawn over the darkness
+lights.zOrder = 9;
+const dotSprite = Sprite.create(16, 16);
+dotSprite.ctx.fillStyle = "#ffd166";
+dotSprite.ctx.arc(8, 8, 8, 0, 2 * Math.PI);
+dotSprite.ctx.fill();
+const dot = Element.create({ sprite: dotSprite, position: { x: 492, y: 292 } });
+scene.add(dot, 20);
+
+cam.onUpdate = () => {
+  const mouse = cam.cameraMousePosition;
+  if (mouse.x || mouse.y) {
+    torch.x = mouse.x;
+    torch.y = mouse.y;
+    dot.position.x = mouse.x - 8;
+    dot.position.y = mouse.y - 8;
+  }
+};
+
+function mainLoop() {
+  cam.clear();
+  scene.draw(cam);
+  cam.flipBuffer();
+  requestAnimationFrame(mainLoop);
+}
+mainLoop();
+</script>
+  </div>
+</main>
+<script src="../assets/nav.js"></script>
+<script src="../assets/highlight.js"></script>
+<script src="../assets/demo.js"></script>
+</body>
+</html>

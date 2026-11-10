@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Entity – JSGE Documentation</title>
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body>
+<main>
+  <h1>Entity</h1>
+  <p class="lead">An entity is a game object: a sprite with a position, a scale, a velocity and optional collision detection.</p>
+
+  <h2>Creating an entity</h2>
+  <pre><code class="language-js">
+const player = Entity.create({
+  sprite: playerSprite,
+  position: { x: 100, y: 200 },
+  scale: 2,
+  physic: true,
+  velocity: { x: 1, y: 0 }
+});
+  </code></pre>
+  <table>
+    <tr><th>Option</th><th>Default</th><th>Description</th></tr>
+    <tr><td><code>sprite</code></td><td>–</td><td>The <a href="sprite.html">Sprite</a> to draw. A sprite can be shared by many entities.</td></tr>
+    <tr><td><code>position</code></td><td><code>{x:0, y:0}</code></td><td>Top-left corner of the entity.</td></tr>
+    <tr><td><code>scale</code></td><td><code>1</code></td><td>Size multiplier of the sprite.</td></tr>
+    <tr><td><code>physic</code></td><td><code>false</code></td><td>When <code>true</code>, the entity checks the collisions you registered on it.</td></tr>
+    <tr><td><code>velocity</code></td><td><code>{x:0, y:0}</code></td><td>Pixels added to the position on every frame the entity is updated.</td></tr>
+    <tr><td><code>gravity</code></td><td><code>0</code></td><td>Maximum falling speed in pixels per frame. <code>0</code> disables gravity. See <a href="#gravity">Gravity</a>.</td></tr>
+    <tr><td><code>gravityAcceleration</code></td><td><code>1</code></td><td>Speed gained by a falling entity on every frame, in pixels per frame.</td></tr>
+  </table>
+  <p><code>Entity.create(data, assigns)</code> also accepts an array of objects as second argument. Their properties and methods are copied onto the entity (hit points, a <code>takeDamage()</code> function…). An existing property is never overwritten, a warning is logged instead. <code>entity.assign(assigns, { overwrite: true })</code> does the same later and can overwrite.</p>
+  <pre><code class="language-js">
+const block = Entity.create({ sprite }, [{
+  life: 3,
+  takeDamage(damage) { this.life -= damage; }
+}]);
+  </code></pre>
+
+  <h2>Drawing and updating</h2>
+  <p>Add the entity to a <a href="scene.html">Scene</a> (recommended), or call <code>entity.draw(camera, zOrder = 0)</code> every frame to queue it directly on a camera (the z-order is then recomputed each frame). By default an entity updates itself (position, collisions) every time it is drawn on a new frame. Set <code>autoUpdate = false</code> to call <code>entity.update()</code> yourself.</p>
+
+  <h2>Collisions</h2>
+  <p>Collisions are declared on the active entity, which must have <code>physic: true</code>. The callback receives the entity that was hit, and is called on every update while the two overlap. The hit box is the sprite size multiplied by the scale. (Note the spelling of the API: <code>addColision…</code>, with a single “l”.)</p>
+  <pre><code class="language-js">
+player.addColisionWithEntity(wall, (wall) => { /* … */ });
+player.addColisionWithArrayOfEntities(coins, (coin) => {
+  scene.remove(coin);
+  player.removeColisionWithEntity(coin);   // stop checking this one
+});
+  </code></pre>
+
+  <h2>Methods</h2>
+  <table>
+    <tr><th>Method</th><th>Description</th></tr>
+    <tr><td><code>Entity.create(data, assigns)</code></td><td>Static. Creates an entity, optionally with extra properties.</td></tr>
+    <tr><td><code>draw(camera, zOrder = 0)</code></td><td>Queues the entity on a camera for the current frame.</td></tr>
+    <tr><td><code>update()</code></td><td>Applies velocity and checks collisions. Called automatically while <code>autoUpdate</code> is on.</td></tr>
+    <tr><td><code>addColisionWithEntity(entity, callback)</code></td><td>Registers a collision with one entity.</td></tr>
+    <tr><td><code>addColisionWithArrayOfEntities(entities, callback)</code></td><td>Registers the same callback for every entity of an array.</td></tr>
+    <tr><td><code>removeColisionWithEntity(entity)</code></td><td>Unregisters a collision.</td></tr>
+    <tr><td><code>assign(objects, { overwrite = false })</code></td><td>Copies the properties of the given objects onto the entity.</td></tr>
+  </table>
+
+  <h2>Properties</h2>
+  <table>
+    <tr><th>Name</th><th>Description</th></tr>
+    <tr><td><code>sprite</code>, <code>position</code>, <code>scale</code></td><td>The sprite, the top-left position <code>{x, y}</code> and the size multiplier.</td></tr>
+    <tr><td><code>velocity</code></td><td><code>{x, y}</code> in pixels per frame. You can edit its fields directly (<code>entity.velocity.x *= -1</code> to bounce).</td></tr>
+    <tr><td><code>physic</code></td><td>Enables collision checks.</td></tr>
+    <tr><td><code>physics</code></td><td>The list of registered collisions, as <code>{entity, onCollision}</code> objects.</td></tr>
+    <tr><td><code>flippedX</code>, <code>flippedY</code></td><td>Booleans: mirror the entity horizontally or vertically.</td></tr>
+    <tr><td><code>currentAnimation</code></td><td>For animated sprites: write the name of an animation (a string). Reading returns the running animation state. It must be set before the first update. See <a href="animation.html">Animation</a>.</td></tr>
+    <tr><td><code>frameRate</code></td><td>Write-only. Number of game frames each picture of the current animation stays on screen.</td></tr>
+    <tr><td><code>gravity</code>, <code>gravityAcceleration</code></td><td>See <a href="#gravity">Gravity</a>.</td></tr>
+    <tr><td><code>autoUpdate</code></td><td>Boolean (<code>true</code> by default): update the entity whenever it is drawn.</td></tr>
+  </table>
+  <h2>Animation</h2>
+  <p>An entity whose sprite is a sprite sheet plays an animation chosen with <code>entity.currentAnimation = "name"</code>. Everything about sprite sheets is on the <a href="animation.html">Animation</a> page. The hit box used for collisions then comes from the current animation.</p>
+
+  <h2 id="gravity">Gravity</h2>
+  <p>With <code>gravity</code> above 0, an entity falls: its speed grows by <code>gravityAcceleration</code> pixels on every frame, up to <code>gravity</code>. It stops when the bottom of its hit box reaches the top of an <a href="element.html">Element</a> displayed through a scene and overlapping it horizontally. Only the top of elements is solid, and gravity requires an animated sprite, since the hit box comes from the animation.</p>
+  <p>While an entity stands on an element, that element’s <code>onGravityContact(element, entity)</code> function is called on every frame. To jump, assign a new upward velocity object: gravity gradually cancels it, then the entity falls back.</p>
+  <pre><code class="language-js">
+const player = Entity.create({ sprite: sheet, position: { x: 100, y: 0 }, gravity: 12, gravityAcceleration: 0.5 });
+player.currentAnimation = "idle";
+
+platform.onGravityContact = (platform, entity) => { grounded = true; };
+if (grounded) player.velocity = { x: 0, y: -20 };   // jump
+  </code></pre>
+  <div class="demo" data-title="Gravity and jumping" data-width="1000" data-height="600" data-fixed>
+<script type="text/plain">
+import { Camera, Sprite, Scene, Entity, Element } from "https://cdn.jsdelivr.net/gh/AubryBoulet/JSGE@main/JSGE/jsge.js";
+
+const canvas = document.querySelector("#gameCanvas");
+const cam = new Camera({ canvas, position: { x: 0, y: 0 }, dimensions: { width: 1000, height: 600 }, backgroundColor: "#1b263b" });
+
+// An animated sprite sheet drawn by code: 4 frames of 40x40, a "breathing" square
+const sheetCanvas = document.createElement("canvas");
+sheetCanvas.width = 160;
+sheetCanvas.height = 40;
+const g = sheetCanvas.getContext("2d");
+g.fillStyle = "#f4a261";
+[40, 36, 32, 36].forEach((height, i) => g.fillRect(i * 40 + 4, 40 - height, 32, height));
+
+const sheet = await Sprite.load(sheetCanvas.toDataURL(), true);
+sheet.animations.column = 4;
+sheet.animations.createAnimationFrames(0, 3, "idle", 10);
+
+const player = Entity.create({ sprite: sheet, position: { x: 330, y: 50 }, gravity: 12, gravityAcceleration: 0.5 });
+player.currentAnimation = "idle";
+
+// Platforms are elements
+const platformSprite = Sprite.create(260, 20);
+platformSprite.ctx.fillStyle = "#778da9";
+platformSprite.ctx.fillRect(0, 0, 260, 20);
+
+const scene = new Scene();
+let grounded = false;
+[[100, 450], [420, 350], [740, 450]].forEach(([x, y]) => {
+  const platform = Element.create({ sprite: platformSprite, position: { x, y } });
+  platform.onGravityContact = () => { grounded = true; };   // called while the player stands on it
+  scene.add(platform);
+});
+scene.add(player);
+
+canvas.addEventListener("click", () => {
+  if (grounded) player.velocity = { x: 0, y: -20 };          // jump
+});
+
+cam.onUpdate = () => {
+  grounded = false;   // set again by onGravityContact during this frame if the player stands on a platform
+  const mouse = cam.cameraMousePosition;
+  if (mouse.x) player.position.x = mouse.x - 20;              // move with the mouse
+  if (player.position.y > 650) player.position.y = -50;       // fell off: respawn at the top
+};
+
+function mainLoop() {
+  cam.clear();
+  scene.draw(cam);
+  cam.flipBuffer();
+  requestAnimationFrame(mainLoop);
+}
+mainLoop();
+</script>
+  </div>
+
+  <h2>Try it</h2>
+  <p>Move the mouse to steer the square and catch the falling coins.</p>
+  <div class="demo" data-title="Entities and collisions" data-width="1000" data-height="600" data-fixed>
+<script type="text/plain">
+import { Camera, Sprite, Scene, Entity } from "https://cdn.jsdelivr.net/gh/AubryBoulet/JSGE@main/JSGE/jsge.js";
+
+const canvas = document.querySelector("#gameCanvas");
+const cam = new Camera({ canvas, position: { x: 0, y: 0 }, dimensions: { width: 1000, height: 600 }, backgroundColor: "#14213d" });
+
+const playerSprite = Sprite.create(60, 40);
+playerSprite.ctx.fillStyle = "#fca311";
+playerSprite.ctx.fillRect(0, 0, 60, 40);
+
+const coinSprite = Sprite.create(20, 20);
+coinSprite.ctx.fillStyle = "gold";
+coinSprite.ctx.arc(10, 10, 10, 0, 2 * Math.PI);
+coinSprite.ctx.fill();
+
+const player = Entity.create({ sprite: playerSprite, position: { x: 470, y: 540 }, physic: true });
+const coins = [];
+for (let i = 0; i < 12; i++) {
+  coins.push(Entity.create({ sprite: coinSprite, position: { x: 80 + i * 75, y: 50 + (i % 4) * 110 }, velocity: { x: 0, y: 1.5 } }));
+}
+
+const scene = new Scene();
+scene.addArray(coins);
+scene.add(player);
+
+let score = 0;
+player.addColisionWithArrayOfEntities(coins, (coin) => {
+  scene.remove(coin);
+  player.removeColisionWithEntity(coin);
+  score++;
+});
+
+cam.onUpdate = () => {
+  const mouse = cam.cameraMousePosition;
+  if (mouse.x || mouse.y) player.position.x = mouse.x - 30;
+  coins.forEach((coin) => { if (coin.position.y > 600) coin.position.y = -20; });   // fall again from the top
+};
+
+cam.postProcess = (camera) => {
+  camera.cameraCtx.fillStyle = "white";
+  camera.cameraCtx.font = "24px sans-serif";
+  camera.cameraCtx.fillText("Coins: " + score, 20, 40);
+};
+
+function mainLoop() {
+  cam.clear();
+  scene.draw(cam);
+  cam.flipBuffer();
+  requestAnimationFrame(mainLoop);
+}
+mainLoop();
+</script>
+  </div>
+</main>
+<script src="../assets/nav.js"></script>
+<script src="../assets/highlight.js"></script>
+<script src="../assets/demo.js"></script>
+</body>
+</html>
