@@ -42,6 +42,7 @@ hero.currentAnimation = "idle";
     <tr><td><code>createAnimationFrames(startFrame, endFrame, animationName, frameRate = 1, frameWidth, frameHeight)</code></td><td>Declares an animation made of the frames from <code>startFrame</code> to <code>endFrame</code> (both included). The optional sizes override the default frame size for this animation.</td></tr>
     <tr><td><code>setAnimationFrameHitBox(animationName, startWidth, endWidth, startHeight, endHeight)</code></td><td>Sets the hit box of an animation, in pixels inside a frame. It is used for entity collisions and for landing on elements with gravity. The default hit box covers the whole frame.</td></tr>
     <tr><td><code>getAnimationFrame(animationName)</code></td><td>Returns a copy of the animation data (<code>frames</code>, <code>frameRate</code>, <code>frameWidth</code>, <code>frameHeight</code>, <code>frameHitBox</code>…). Throws an error for an unknown name. This is what <code>entity.currentAnimation</code> uses.</td></tr>
+    <tr><td><code>deleteAnimationFrames(animationName)</code></td><td>Removes a declared animation.</td></tr>
     <tr><td><code>image</code></td><td>The sprite sheet image.</td></tr>
   </table>
 

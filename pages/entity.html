@@ -81,6 +81,7 @@ player.addColisionWithArrayOfEntities(coins, (coin) => {
   <p>An entity whose sprite is a sprite sheet plays an animation chosen with <code>entity.currentAnimation = "name"</code>. Everything about sprite sheets is on the <a href="animation.html">Animation</a> page. The hit box used for collisions then comes from the current animation.</p>
 
   <h2 id="gravity">Gravity</h2>
+  <p><strong>Experimental.</strong> The gravity system is a first draft that will be reworked: expect changes in a future version.</p>
   <p>With <code>gravity</code> above 0, an entity falls: its speed grows by <code>gravityAcceleration</code> pixels on every frame, up to <code>gravity</code>. It stops when the bottom of its hit box reaches the top of an <a href="element.html">Element</a> displayed through a scene and overlapping it horizontally. Only the top of elements is solid, and gravity requires an animated sprite, since the hit box comes from the animation.</p>
   <p>While an entity stands on an element, that element’s <code>onGravityContact(element, entity)</code> function is called on every frame. To jump, assign a new upward velocity object: gravity gradually cancels it, then the entity falls back.</p>
   <pre><code class="language-js">
