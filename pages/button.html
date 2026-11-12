@@ -33,7 +33,7 @@ scene.add(button);         // or button.draw(camera) every frame
     <tr><td><code>onMouseOver(camera)</code></td><td>On every frame while the mouse is over it.</td></tr>
     <tr><td><code>mouseOver</code></td><td>Read-only boolean, <code>true</code> while the mouse is over the button.</td></tr>
   </table>
-  <p>The mouse is tracked in page coordinates, with a few pixels of margin around the button, and only while it is over the camera that draws it. As for <code>cameraMousePosition</code>, the canvas should sit at the top-left of the page, without CSS scaling.</p>
+  <p>Mouse tracking relies on the camera: a button reacts while <code>camera.isMouseOver</code> is true, using <code>cameraMousePosition</code>, with a few pixels of margin around the button.</p>
 
   <h2>Style</h2>
   <table>

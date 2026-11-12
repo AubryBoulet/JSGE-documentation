@@ -72,10 +72,11 @@ mainLoop();
     <tr><td><code>onUpdate</code></td><td>Function called on every new frame, just before drawing. The right place for game logic.</td></tr>
     <tr><td><code>postProcess</code></td><td>Function called with the camera after everything is drawn, before the frame reaches the canvas. Anything drawn on <code>cameraCtx</code> there ends up on top of the scene: HUD, filters…</td></tr>
     <tr><td><code>onMouseMouve</code></td><td>Function called with the mouse position when the mouse moves over the camera. (Spelled this way in the engine.)</td></tr>
-    <tr><td><code>cameraMousePosition</code></td><td>Read-only <code>{x, y}</code>: the last mouse position over the camera, relative to it. It stays at <code>{0, 0}</code> until the mouse has moved over the camera.</td></tr>
-    <tr><td><code>Camera.cameras</code>, <code>Camera.mousePosition</code></td><td>Static: every camera created so far, and the last mouse position in page coordinates.</td></tr>
+    <tr><td><code>cameraMousePosition</code></td><td>Read-only <code>{x, y}</code>: the last mouse position over the camera, relative to it. It keeps its last value when the mouse leaves the camera, so check <code>isMouseOver</code> first.</td></tr>
+    <tr><td><code>isMouseOver</code></td><td>Read-only boolean: <code>true</code> while the mouse is over the camera.</td></tr>
+    <tr><td><code>Camera.cameras</code></td><td>Static: every camera created so far.</td></tr>
   </table>
-  <p><strong>Mouse position.</strong> The camera computes the mouse position from page coordinates (<code>pageX</code>, <code>pageY</code>) minus its own <code>position</code>. For exact values, the canvas should sit at the top-left corner of the page, and CSS scaling of the canvas should be avoided.</p>
+  <p><strong>Mouse position.</strong> The camera works out the mouse position from the position and the size of the canvas on the page, so it stays correct wherever the canvas is placed, and even if CSS scales it. Use <code>isMouseOver</code> to know whether the mouse is currently over the camera.</p>
 
   <h2>Child cameras</h2>
   <p><code>Camera.createChildCamera(parent, position, dimensions, backgroundColor, backgroundImage)</code> creates a camera inside a parent camera. Its <code>position</code> is relative to the parent, and it must fit inside it (an error is thrown otherwise). The parent clears its children, and they are rendered with it on every frame, but they never clear the canvas themselves.</p>
@@ -118,7 +119,7 @@ scene.add(toggleButton);
 // onUpdate: called on every new frame, just before drawing
 cam.onUpdate = () => {
   const mouse = cam.cameraMousePosition;
-  if (mouse.x || mouse.y) {   // stays at (0, 0) until the mouse has moved
+  if (cam.isMouseOver) {   // only while the mouse is over the camera
     square.position.x = mouse.x - 20;
     square.position.y = mouse.y - 20;
   }

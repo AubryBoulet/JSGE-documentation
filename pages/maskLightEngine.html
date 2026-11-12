@@ -102,7 +102,7 @@ scene.add(dot, 20);
 
 cam.onUpdate = () => {
   const mouse = cam.cameraMousePosition;
-  if (mouse.x || mouse.y) {
+  if (cam.isMouseOver) {
     torch.x = mouse.x;
     torch.y = mouse.y;
     dot.position.x = mouse.x - 8;

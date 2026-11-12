@@ -75,7 +75,7 @@ fire.startEmission();
 // onUpdate runs on every new frame: make the emitter follow the mouse
 camera.onUpdate = () => {
   const mouse = camera.cameraMousePosition;
-  if (mouse.x || mouse.y) {   // (0, 0) until the mouse has moved over the canvas
+  if (camera.isMouseOver) {   // only while the mouse is over the camera
     fire.x = mouse.x;
     fire.y = mouse.y;
   }

@@ -134,7 +134,7 @@ canvas.addEventListener("click", () => {
 cam.onUpdate = () => {
   grounded = false;   // set again by onGravityContact during this frame if the player stands on a platform
   const mouse = cam.cameraMousePosition;
-  if (mouse.x) player.position.x = mouse.x - 20;              // move with the mouse
+  if (cam.isMouseOver) player.position.x = mouse.x - 20;              // move with the mouse
   if (player.position.y > 650) player.position.y = -50;       // fell off: respawn at the top
 };
 
@@ -185,7 +185,7 @@ player.addColisionWithArrayOfEntities(coins, (coin) => {
 
 cam.onUpdate = () => {
   const mouse = cam.cameraMousePosition;
-  if (mouse.x || mouse.y) player.position.x = mouse.x - 30;
+  if (cam.isMouseOver) player.position.x = mouse.x - 30;
   coins.forEach((coin) => { if (coin.position.y > 600) coin.position.y = -20; });   // fall again from the top
 };
 
