@@ -43,7 +43,7 @@ function mainLoop() {
 }
 mainLoop();
   </code></pre>
-  <p>If less than one frame interval has elapsed since the last frame, <code>clear()</code> does nothing and <code>flipBuffer()</code> skips the rendering, so the target FPS is respected even if <code>requestAnimationFrame</code> fires more often. <code>flipBuffer()</code> returns <code>true</code> when a frame was actually rendered. Inside a rendered frame, the order is: <code>onUpdate</code>, scenes, directly drawn entities (sorted by z-order), child cameras, lights, <code>postProcess</code>, then the result is copied to the canvas.</p>
+  <p>If less than one frame interval has elapsed since the last frame, <code>clear()</code> does nothing and <code>flipBuffer()</code> skips the rendering, so the target FPS is respected even if <code>requestAnimationFrame</code> fires more often. <code>flipBuffer()</code> returns <code>true</code> when a frame was actually rendered. Inside a rendered frame, the order is: <code>onUpdate</code>, scenes, directly drawn elements (sorted by z-order), the lights (elements above the light engine’s <code>zOrder</code> are drawn right after them), the child cameras, <code>postProcess</code>, then the result is copied to the canvas.</p>
 
   <h2>Methods</h2>
   <table>
@@ -80,7 +80,7 @@ mainLoop();
 
   <h2>Child cameras</h2>
   <p><code>Camera.createChildCamera(parent, position, dimensions, backgroundColor, backgroundImage)</code> creates a camera inside a parent camera. Its <code>position</code> is relative to the parent, and it must fit inside it (an error is thrown otherwise). The parent clears its children, and they are rendered with it on every frame, but they never clear the canvas themselves.</p>
-  <p>A child camera is drawn inside its parent camera’s canvas, after the parent’s own elements and before the lights and <code>postProcess</code>. It therefore covers whatever the parent drew behind it, and anything drawn in the parent’s <code>postProcess</code> ends up on top of it. Child cameras are handy for minimaps, split views, UI panels or parallax layers.</p>
+  <p>A child camera is drawn inside its parent camera’s canvas, after the parent’s own elements and lights, and just before <code>postProcess</code>. It therefore covers whatever the parent drew behind it, and anything drawn in the parent’s <code>postProcess</code> ends up on top of it. Child cameras are handy for minimaps, split views, UI panels or parallax layers.</p>
 
   <h2>Lighting</h2>
   <p>Lights are managed by the camera: <code>camera.initMaskLightEngine()</code> returns a light engine bound to that camera. Everything about it is on the <a href="maskLightEngine.html">Light engine</a> page.</p>
