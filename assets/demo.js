@@ -1,6 +1,7 @@
 // Interactive example: <div class="demo" data-title="…" [data-width="800" data-height="600" data-fixed]><script type="text/plain">code</script></div>
 // The code runs in an isolated iframe; JSGE is imported from the CDN. A <canvas id="gameCanvas"> is provided (800×600 by default).
-// data-fixed: the canvas keeps its exact size (no CSS scaling). Required for examples that use the mouse position.
+// By default the canvas scales with the width of the page (the camera corrects the mouse position accordingly).
+// data-fixed: the canvas keeps its exact pixel size instead (the example scrolls if the page is narrower).
 document.querySelectorAll(".demo").forEach(el => {
   const init = el.querySelector('script[type="text/plain"]').textContent.trim();
   const w = +el.dataset.width || 800, h = +el.dataset.height || 600, fixed = el.hasAttribute("data-fixed");

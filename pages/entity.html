@@ -91,7 +91,7 @@ player.currentAnimation = "idle";
 platform.onGravityContact = (platform, entity) => { grounded = true; };
 if (grounded) player.velocity = { x: 0, y: -20 };   // jump
   </code></pre>
-  <div class="demo" data-title="Gravity and jumping" data-width="1000" data-height="600" data-fixed>
+  <div class="demo" data-title="Gravity and jumping" data-width="1000" data-height="600">
 <script type="text/plain">
 import { Camera, Sprite, Scene, Entity, Element } from "https://cdn.jsdelivr.net/gh/AubryBoulet/JSGE@main/JSGE/jsge.js";
 
@@ -150,7 +150,7 @@ mainLoop();
 
   <h2>Try it</h2>
   <p>Move the mouse to steer the square and catch the falling coins.</p>
-  <div class="demo" data-title="Entities and collisions" data-width="1000" data-height="600" data-fixed>
+  <div class="demo" data-title="Entities and collisions" data-width="1000" data-height="600">
 <script type="text/plain">
 import { Camera, Sprite, Scene, Entity } from "https://cdn.jsdelivr.net/gh/AubryBoulet/JSGE@main/JSGE/jsge.js";
 
