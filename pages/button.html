@@ -77,8 +77,8 @@ button.onClick = () => {
   clicks++;
   button.value = "Clicked " + clicks + " time" + (clicks > 1 ? "s" : "");
 };
-button.onMouseEnter = () => { button.backgroundColor = "#90e0ef"; };
-button.onMouseLeave = () => { button.backgroundColor = "#4cc9f0"; };
+button.hoverStyle  = { backgroundColor: "#90e0ef" };
+button.activeStyle = { boxShadow: [3, 3, "rgba(0, 0, 0, 0.5)"] }; 
 
 const scene = new Scene();
 scene.add(button);
