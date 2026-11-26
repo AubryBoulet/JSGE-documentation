@@ -27,7 +27,7 @@ function mainLoop() {
   requestAnimationFrame(mainLoop);
 }
   </code></pre>
-  <p>A scene can contain entities, elements and particle emitters. Elements with a higher <code>zOrder</code> are drawn on top of the others; elements sharing the same <code>zOrder</code> are drawn in the order they were added. The sorting is done when elements are added or re-ordered, not on every frame, which is why a scene performs better than drawing entities one by one with <code>entity.draw(cam)</code>.</p>
+  <p>A scene can contain entities, elements, particle emitters and gadgets such as buttons. Elements with a higher <code>zOrder</code> are drawn on top of the others; elements sharing the same <code>zOrder</code> are drawn in the order they were added. The sorting is done when elements are added or re-ordered, not on every frame, which is why a scene performs better than drawing entities one by one with <code>entity.draw(cam)</code>.</p>
 
   <h2>Methods</h2>
   <table>

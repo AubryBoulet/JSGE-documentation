@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Gadget – JSGE Documentation</title>
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body>
+<main>
+  <h1>Gadget</h1>
+  <p class="lead">The base class of interface widgets such as <a href="button.html">Button</a>. It draws a styled rectangle with an optional text, tracks the mouse, and fires events. Everything described here is available on every gadget.</p>
+
+  <h2>Using a gadget</h2>
+  <p>A gadget is drawn through a <a href="scene.html">Scene</a>, or with <code>gadget.draw(camera, zOrder = 0)</code> on every frame. Its <code>position</code> is in camera coordinates and its <code>dimension</code> is its size.</p>
+  <pre><code class="language-js">
+scene.add(gadget);
+gadget.backgroundColor = "#4cc9f0";
+gadget.borderRadius = [12];
+gadget.hoverStyle = { backgroundColor: "#90e0ef" };
+gadget.onClick = () => console.log("clicked");
+  </code></pre>
+  <p>Gadgets listen to the mouse through their camera: they react while <code>camera.isMouseOver</code> is true, within a margin of about 8 pixels around their rectangle. If several gadgets overlap, only the first one created receives the press and the click.</p>
+
+  <h2>Mouse events</h2>
+  <p>Assign a function to the property. Each property can hold one function.</p>
+  <table>
+    <tr><th>Property</th><th>Called</th></tr>
+    <tr><td><code>onMouseEnter(camera)</code></td><td>When the mouse enters the gadget.</td></tr>
+    <tr><td><code>onMouseLeave(camera)</code></td><td>When the mouse leaves it.</td></tr>
+    <tr><td><code>onMouseOver(camera)</code></td><td>On every frame while the mouse is over it.</td></tr>
+    <tr><td><code>onActived()</code></td><td>When the mouse button is pressed on the gadget.</td></tr>
+    <tr><td><code>onClick()</code></td><td>When the gadget is clicked. It receives no argument.</td></tr>
+    <tr><td><code>mouseOver</code></td><td>Read-only boolean, <code>true</code> while the mouse is over the gadget.</td></tr>
+  </table>
+
+  <h2>Style</h2>
+  <table>
+    <tr><th>Property</th><th>Description</th></tr>
+    <tr><td><code>backgroundColor</code></td><td>Any CSS color. <code>"#fff"</code> by default.</td></tr>
+    <tr><td><code>border</code></td><td>Object <code>{ lineWidth = 1, color, style = "solid" }</code>, or <code>null</code> for no border. Without a <code>color</code>, the current background color is used.</td></tr>
+    <tr><td><code>borderRadius</code></td><td>An array of pixels: <code>[all]</code>, <code>[top, bottom]</code> or <code>[topLeft, topRight, bottomLeft, bottomRight]</code>.</td></tr>
+    <tr><td><code>boxShadow</code></td><td>One shadow, as an object <code>{ offsetX, offsetY, color, blur, inset }</code> or an array <code>[offsetX, offsetY, color, blur, inset]</code>, or several shadows as an array of those. As in CSS, the first shadow is painted on top. An <code>inset</code> shadow is drawn inside the gadget, without blur.</td></tr>
+  </table>
+  <p>Shadows make the drawn area larger than the gadget, but they are not part of its <code>dimension</code> and do not react to the mouse.</p>
+
+  <h3>Hover and pressed styles</h3>
+  <p><code>hoverStyle</code> and <code>activeStyle</code> are style overrides. They are layered over the normal style while they apply, and removed automatically afterwards: there is nothing to restore in <code>onMouseLeave</code>.</p>
+  <table>
+    <tr><th>Layer</th><th>Applies when</th></tr>
+    <tr><td>normal style</td><td>always</td></tr>
+    <tr><td><code>hoverStyle</code></td><td>the mouse is over the gadget</td></tr>
+    <tr><td><code>activeStyle</code></td><td>the mouse button is held down and the mouse is over the gadget (on top of <code>hoverStyle</code>)</td></tr>
+  </table>
+  <pre><code class="language-js">
+gadget.hoverStyle  = { backgroundColor: "#90e0ef" };
+gadget.activeStyle = { boxShadow: [3, 3, "rgba(0, 0, 0, 0.5)"] };   // pressed: smaller shadow
+gadget.hoverStyle  = null;                                           // no hover style
+  </code></pre>
+  <p>An override can contain <code>backgroundColor</code>, <code>border</code>, <code>borderRadius</code> and <code>boxShadow</code>, in the same formats as above. Only the listed properties are overridden. Assigning a new <code>hoverStyle</code> or <code>activeStyle</code> replaces the previous one, it does not merge with it. Changes made to the normal style while the mouse is over the gadget (in <code>onClick</code>, for example) are kept after the mouse leaves.</p>
+
+  <h2>Text</h2>
+  <p>The text is a <a href="text.html">Text</a>, so it supports the same effect markup. It is black by default. It starts at the top-left corner of the gadget; with <code>textAlign = "center"</code> it is centered both horizontally and vertically.</p>
+  <table>
+    <tr><th>Name</th><th>Description</th></tr>
+    <tr><td><code>value</code></td><td>The text, with optional effect markup.</td></tr>
+    <tr><td><code>font</code></td><td>CSS font, for example <code>"28px sans-serif"</code>.</td></tr>
+    <tr><td><code>textAlign</code>, <code>textBaseline</code>, <code>textDirection</code></td><td>Same values as the Canvas properties.</td></tr>
+    <tr><td><code>addTextGradient(name, gradient)</code></td><td>Registers a gradient for the <code>${grad(name) …}</code> effect.</td></tr>
+    <tr><td><code>updateText()</code></td><td>Forces the text effects to update after changing effect properties.</td></tr>
+  </table>
+
+  <h2>Other members</h2>
+  <table>
+    <tr><th>Name</th><th>Description</th></tr>
+    <tr><td><code>position</code>, <code>dimension</code></td><td><code>{x, y}</code> and <code>{width, height}</code>. Set the dimension at creation: the text is sized from it.</td></tr>
+    <tr><td><code>draw(camera, zOrder = 0)</code></td><td>Queues the gadget on a camera for the current frame. Not needed if it is in a scene.</td></tr>
+    <tr><td><code>destroy()</code></td><td>Stops the gadget from handling the mouse. Call it when you stop using a gadget, typically when you also remove it from its scene. Otherwise a gadget removed while the mouse is over it keeps receiving clicks.</td></tr>
+  </table>
+
+  <h2>Creating a custom gadget</h2>
+  <p>Gadget is not exported by <code>jsge.js</code>. Import it from its file, with the same base URL as the engine so that both share one copy of the code. Extend it with <code>extends Gadget</code>: the constructor takes <code>{ position, dimension, value }</code> (an empty <code>value</code> means no text). Gadget handles the drawing, the hit testing and the events; your class adds its own state and reacts to it through the public properties.</p>
+  <p>The example below is a toggle switch. Its normal style depends on its state, so the hover and pressed overrides, which only touch the border, work in both states.</p>
+  <pre><code class="language-js">
+import { Gadget } from "https://cdn.jsdelivr.net/gh/AubryBoulet/JSGE@main/JSGE/classes/gadget.js";
+
+class Toggle extends Gadget {
+  #label;
+  #checked;
+  onChange;                                   // optional callback(checked)
+
+  constructor(label, position, checked = false) {
+    super({ position, dimension: { width: 260, height: 50 }, value: "" });
+    this.#label = label;
+    this.#checked = checked;
+    this.font = "22px sans-serif";
+    this.textAlign = "center";
+    this.borderRadius = [25];
+    this.border = { lineWidth: 2, color: "#222" };
+    this.hoverStyle = { border: { lineWidth: 4, color: "#222" } };
+    this.activeStyle = { border: { lineWidth: 6, color: "#222" } };
+    this.onClick = () => { this.checked = !this.#checked; };
+    this.#refresh();
+  }
+
+  get checked() { return this.#checked; }
+  set checked(value) {
+    this.#checked = Boolean(value);
+    this.#refresh();
+    if (typeof this.onChange === "function") this.onChange(this.#checked);
+  }
+
+  #refresh() {
+    this.backgroundColor = this.#checked ? "#95d5b2" : "#dee2e6";
+    this.value = this.#label + ": " + (this.#checked ? "ON" : "OFF");
+  }
+}
+  </code></pre>
+
+  <h2>Try it</h2>
+  <p>Two instances of the toggle above. Hover and press them to see the style layers, and click to switch.</p>
+  <div class="demo" data-title="A custom Toggle gadget" data-width="1000" data-height="280">
+<script type="text/plain">
+import { Camera, Scene } from "https://cdn.jsdelivr.net/gh/AubryBoulet/JSGE@main/JSGE/jsge.js";
+import { Gadget } from "https://cdn.jsdelivr.net/gh/AubryBoulet/JSGE@main/JSGE/classes/gadget.js";
+
+class Toggle extends Gadget {
+  #label;
+  #checked;
+  onChange;                                   // optional callback(checked)
+
+  constructor(label, position, checked = false) {
+    super({ position, dimension: { width: 260, height: 50 }, value: "" });
+    this.#label = label;
+    this.#checked = checked;
+    this.font = "22px sans-serif";
+    this.textAlign = "center";
+    this.borderRadius = [25];
+    this.border = { lineWidth: 2, color: "#222" };
+    this.hoverStyle = { border: { lineWidth: 4, color: "#222" } };
+    this.activeStyle = { border: { lineWidth: 6, color: "#222" } };
+    this.onClick = () => { this.checked = !this.#checked; };
+    this.#refresh();
+  }
+
+  get checked() { return this.#checked; }
+  set checked(value) {
+    this.#checked = Boolean(value);
+    this.#refresh();
+    if (typeof this.onChange === "function") this.onChange(this.#checked);
+  }
+
+  #refresh() {
+    this.backgroundColor = this.#checked ? "#95d5b2" : "#dee2e6";
+    this.value = this.#label + ": " + (this.#checked ? "ON" : "OFF");
+  }
+}
+
+const canvas = document.querySelector("#gameCanvas");
+const cam = new Camera({ canvas, position: { x: 0, y: 0 }, dimensions: { width: 1000, height: 280 }, backgroundColor: "#222" });
+
+let status = "Nothing changed yet";
+const sound = new Toggle("Sound", { x: 370, y: 70 }, true);
+const music = new Toggle("Music", { x: 370, y: 150 });
+sound.onChange = (checked) => { status = "Sound is " + (checked ? "on" : "off"); };
+music.onChange = (checked) => { status = "Music is " + (checked ? "on" : "off"); };
+
+const scene = new Scene();
+scene.add(sound);
+scene.add(music);
+
+cam.postProcess = (camera) => {
+  camera.cameraCtx.fillStyle = "white";
+  camera.cameraCtx.font = "22px sans-serif";
+  camera.cameraCtx.fillText(status, 20, 35);
+};
+
+function mainLoop() {
+  cam.clear();
+  scene.draw(cam);
+  cam.flipBuffer();
+  requestAnimationFrame(mainLoop);
+}
+mainLoop();
+</script>
+  </div>
+</main>
+<script src="../assets/nav.js"></script>
+<script src="../assets/highlight.js"></script>
+<script src="../assets/demo.js"></script>
+</body>
+</html>

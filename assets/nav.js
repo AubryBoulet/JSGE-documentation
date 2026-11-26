@@ -8,7 +8,7 @@
     ["Classes", [
       ["Camera", "pages/camera.html"], ["Scene", "pages/scene.html"],
       ["Entity", "pages/entity.html"], ["Sprite", "pages/sprite.html"], ["Animation", "pages/animation.html"],
-      ["Text", "pages/text.html"], ["Button", "pages/button.html"],
+      ["Text", "pages/text.html"], ["Gadget", "pages/gadget.html"], ["Button", "pages/button.html"],
       ["Element", "pages/element.html"], ["Transition", "pages/transition.html"],
       ["ParticleEmitter", "pages/particleEmitter.html"]]],
     ["Effects", [["Light engine", "pages/maskLightEngine.html"]]]

@@ -107,7 +107,7 @@ squareSprite.ctx.fillStyle = "#e63946";
 squareSprite.ctx.fillRect(0, 0, 40, 40);
 const square = Entity.create({ sprite: squareSprite, position: { x: 480, y: 280 } });
 
-const toggleButton = Button.create("Toggle Post Process", { width: 200, height: 60 }, { x: 10, y: 10 });
+const toggleButton = Button.create("Toggle Post Process", { width: 200, height: 40 }, { x: 10, y: 10 });
 toggleButton.onClick = () => {
   showOverlap = !showOverlap;
 };
